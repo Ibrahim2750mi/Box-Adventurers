@@ -77,7 +77,7 @@ def gen_world():
 
     # generating middle mine
     for co_ords, chunk in world.items():
-        if -32 > co_ords[3] > -128:
+        if -32 > co_ords[3] >= -128:
             world[co_ords] = __generate_middle_mine(co_ords[3])
     return world
 
