@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # sky = 128
 # clouds = 129
 
