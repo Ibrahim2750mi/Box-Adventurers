@@ -7,6 +7,9 @@ import numpy as np
 # clouds = 129
 # stone = 130
 # dirt = 131
+# coal = 132
+# iron = 133
+# iron = 134
 
 def __gen_empty_chunks(x_min: int = -160, x_max: int = 160, y_min: int = -160, y_max: int = 160) -> dict:
     world = {}
