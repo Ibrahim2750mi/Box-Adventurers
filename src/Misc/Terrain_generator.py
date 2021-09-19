@@ -23,6 +23,7 @@ def gen_world():
     world = __gen_empty_chunks()
     for co_ords, chunk in world.items():
         if co_ords[3] >= 80:
+            # if y max is greater than 80 we generate sky
             world[co_ords] = __sky_gen()
 
     return world
