@@ -1,0 +1,20 @@
+# Byte code
+__pycache__/
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+
+# IDE stuff
+.vscode
+.idea
+
+
+Pipfile.lock
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json

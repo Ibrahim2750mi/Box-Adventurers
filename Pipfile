@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+arcade = "~=2.6"
+
+[dev-packages]
+pre-commit = "~=2.15"
+autopep8   = "~= 1.5"
+
+
+[requires]
+python_version = "3.9"
