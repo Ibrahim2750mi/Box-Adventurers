@@ -1,6 +1,6 @@
-from random import randint, choices
+from random import choices, randint
 from time import perf_counter
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
 import numpy as np
 
@@ -12,14 +12,14 @@ import numpy as np
 # coal = 132
 # iron = 133
 # diamond = 134
-
+# hard_stone = 135
 
 def __gen_empty_chunks(x_min: int = -160, x_max: int = 160, y_min: int = -160, y_max: int = 160) -> \
         dict[Tuple[int, int, int, int], np.ndarray]:
     world = {}
     for x in range(x_min, x_max, 16):
         for y in range(y_min, y_max, 16):
-            world[(x + 16, x, y + 16, y)] = np.zeros((16, 16))
+            world[(x + 16, x, y + 16, y)] = np.empty((16, 16), dtype=int)
     return world
 
 
@@ -68,6 +68,11 @@ def __generate_middle_mine(y_max: int) -> np.ndarray:
     return mine
 
 
+def __generate_lower_mine() -> np.ndarray:
+    mine = np.full((16, 16), 135)
+    return mine
+
+
 def gen_world() -> Dict[Tuple[int, ...], np.ndarray]:
     world = __gen_empty_chunks()
 
@@ -87,6 +92,12 @@ def gen_world() -> Dict[Tuple[int, ...], np.ndarray]:
     for co_ords, chunk in world.items():
         if -32 > co_ords[3] >= -128:
             world[co_ords] = __generate_middle_mine(co_ords[3])
+
+    # generating lower mine
+    for co_ords, chunk in world.items():
+        if co_ords[3] <= -144:
+            world[co_ords] = __generate_lower_mine()
+
     return world
 
 
