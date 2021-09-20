@@ -1,1 +1,2 @@
 arcade ~= 2.6
+numpy  ~= 1.20
