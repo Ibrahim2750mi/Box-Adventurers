@@ -1,4 +1,6 @@
 from random import randint, choices
+from time import perf_counter
+from typing import Tuple, Dict
 
 import numpy as np
 
@@ -11,7 +13,9 @@ import numpy as np
 # iron = 133
 # diamond = 134
 
-def __gen_empty_chunks(x_min: int = -160, x_max: int = 160, y_min: int = -160, y_max: int = 160) -> dict:
+
+def __gen_empty_chunks(x_min: int = -160, x_max: int = 160, y_min: int = -160, y_max: int = 160) -> \
+        dict[Tuple[int, int, int, int], np.ndarray]:
     world = {}
     for x in range(x_min, x_max, 16):
         for y in range(y_min, y_max, 16):
@@ -27,15 +31,16 @@ def __sky_gen():
     return sky
 
 
-def __generate_upper_mine():
+def __generate_upper_mine() -> np.ndarray:
     mine = np.full((16, 16), 130)
+
     dirt_co_ords = np.random.randint(16, size=(10, 2))
     __placer(randint(6, 8), 131, dirt_co_ords, mine)
 
     return mine
 
 
-def __generate_middle_mine(y_max: int):
+def __generate_middle_mine(y_max: int) -> np.ndarray:
     mine = np.full((16, 16), 130)
 
     coal_co_ords = np.random.randint(16, size=(7, 2))
@@ -63,7 +68,7 @@ def __generate_middle_mine(y_max: int):
     return mine
 
 
-def gen_world():
+def gen_world() -> Dict[Tuple[int, ...], np.ndarray]:
     world = __gen_empty_chunks()
 
     # generating sky
@@ -107,4 +112,6 @@ def __placer(range_: int, block_id: int, co_ords_arr: np.ndarray, main: np.ndarr
 
 
 if __name__ == '__main__':
+    s = perf_counter()
     print(gen_world())
+    print(perf_counter() - s)
