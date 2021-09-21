@@ -1,18 +1,36 @@
-class Block(arcade.Sprite):
-    def __init__(self, width, height, breaking_time, hp, id, lightning, place_sound, textures, *args, **kwargs):
-        super().__init__(*args, **kwargs, image_width = width, image_height = height, texture = textures[0])
-        arcade.Sound(place_sound).play()
+from pathlib import Path
 
-        for texture in textures:
-            self.append_texture(texture)
+import arcade
+
+class BreakMask(arcade.Sprite):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.break_state = -1
+        self.textures = []
+        graphics = Path("assets/game_graphics")
+        for asset in graphics:
+            self.textures.append(arcade.Sprite(asset))
+
+    def add_break_state(self):
+        self.break_state += 1
+        self.set_texture(self.textures[self.break_state])
+
+    def reset_break_state(self):
+        self.break_state = 0
+        self.set_texture(self.textures[self.break_state])
+
+class Block(arcade.Sprite):
+    def __init__(self, width, height, breaking_time, hp, id, lightning, place_sound, *args, **kwargs):
+        super().__init__(*args, **kwargs, image_width = width, image_height = height)
+        arcade.Sound(place_sound).play()
 
         self.width = width
         self.height = height
-        self.x = self.center_x-width/2
-        self.y = self.center_y-height/2
+        self.x = self.center_x
+        self.y = self.center_y
         self.hp = hp
         self.id = id
-        self.texture = iter(self.textures)
+        self.break_mask = BreakMask()
         self.lightning = lightning
         self.breaking_time = breaking_time
     
@@ -34,6 +52,6 @@ class Block(arcade.Sprite):
         return arcade.check_for_collision_with_lists(self, spritelists)
 
     def break_anim(self, val):
-        self.set_texture = next(self.texture)
-        self.hp_set(self.hp - val)
+        self.break_mask.add_break_state
         time.sleep(self.breaking_time)
+
