@@ -3,10 +3,9 @@ from copy import deepcopy
 from functools import cache
 from math import ceil, floor
 from random import choice, choices, randint
-from typing import Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, NewType, Tuple
 
 import numpy as np
-
 
 # sky = 128
 # clouds = 129
@@ -36,8 +35,11 @@ import numpy as np
 # cactus = 153
 # dead bush = 154
 
+Hex = NewType("Hex", str)
+
+
 @cache
-def __tree(tree_type: hex, jungle: Optional[bool] = False) -> np.ndarray:
+def __tree(tree_type: Hex, jungle: bool = False) -> np.ndarray:
     # Function to generate a numpy tree.
     if jungle:
         k = 2
@@ -46,14 +48,14 @@ def __tree(tree_type: hex, jungle: Optional[bool] = False) -> np.ndarray:
         k = 0
         t = np.zeros((6, 3))
 
-    tree_type = int(tree_type, 16)
-    t[0:3 + k, 0:3 + k] = tree_type
-    t[3+k:6 + k*2, k] = tree_type + 1
+    int_tree_type = int(tree_type, 16)
+    t[0:3 + k, 0:3 + k] = int_tree_type
+    t[3 + k:6 + k * 2, k] = int_tree_type + 1
     return t
 
 
 @cache
-def __volcano(volcano_w: int) -> np.ndarray:
+def __volcano(volcano_w: int) -> np.ndarray[Any, Any]:
     # Function to generate a numpy volcano
     n_factor = volcano_w / 2
     volcano_h = ceil(n_factor)
@@ -65,17 +67,17 @@ def __volcano(volcano_w: int) -> np.ndarray:
 
 
 def __gen_empty_chunks(x_min: int, x_max: int, y_min: int, y_max: int) \
-        -> dict[Tuple[int, int, int, int], np.ndarray]:
+        -> Dict[Tuple[int, ...], Tuple[Tuple[int, ...], ...]]:
     # For generating empty chunks.
     world = {}
     for x in range(x_min, x_max, 16):
         for y in range(y_min, y_max, 16):
-            world[(x + 16, x, y + 16, y)] = np.empty((16, 16), dtype=int)
+            world[(x + 16, x, y + 16, y)] = tuple(map(tuple, np.empty((16, 16), dtype=int)))
     return world
 
 
 @cache
-def __sky_gen() -> Tuple[Tuple[int, ...]]:
+def __sky_gen() -> Tuple[Tuple[int, ...], ...]:
     # For generating the sky.
     sky = tuple(map(tuple, np.full((16, 16), 128)))
     clouds_co_ords = tuple(map(tuple, np.random.randint(16, size=(14, 2))))
@@ -85,7 +87,7 @@ def __sky_gen() -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __generate_upper_mine() -> Tuple[Tuple[int, ...]]:
+def __generate_upper_mine() -> Tuple[Tuple[int, ...], ...]:
     # For generating the upper part of the mine.
     mine = tuple(map(tuple, np.full((16, 16), 130)))
 
@@ -95,7 +97,7 @@ def __generate_upper_mine() -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __generate_middle_mine(y_max: int) -> Tuple[Tuple[int, ...]]:
+def __generate_middle_mine(y_max: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating the main part of the mine
     mine = tuple(map(tuple, np.full((16, 16), 130)))
 
@@ -125,14 +127,14 @@ def __generate_middle_mine(y_max: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __generate_lower_mine() -> Tuple[Tuple[int, ...]]:
+def __generate_lower_mine() -> Tuple[Tuple[int, ...], ...]:
     # For generating the lower part of the mine.
     mine = np.full((16, 16), 135)
     return tuple(map(tuple, mine))
 
 
 @cache
-def __gen_forest(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...]]:
+def __gen_forest(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating forest biome.
     biome = np.full((16, 16), 128)
 
@@ -150,7 +152,7 @@ def __gen_forest(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __gen_plain(y_max: int) -> Tuple[Tuple[int, ...]]:
+def __gen_plain(y_max: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating plains biome.
     biome = tuple(map(tuple, np.full((16, 16), 128)))
     dirt_co_ords = tuple(map(tuple, np.random.randint(16, size=(10, 2))))
@@ -161,7 +163,7 @@ def __gen_plain(y_max: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __gen_desert(y_max: int) -> Tuple[Tuple[int, ...]]:
+def __gen_desert(y_max: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating desert biome.
     biome = np.full((16, 16), 128)
 
@@ -182,7 +184,7 @@ def __gen_desert(y_max: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __gen_volcanoes(y_max: int) -> Tuple[Tuple[int, ...]]:
+def __gen_volcanoes(y_max: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating volcanic biome.
     biome = np.full((16, 16), 128)
 
@@ -199,7 +201,7 @@ def __gen_volcanoes(y_max: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __gen_jungles(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...]]:
+def __gen_jungles(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...], ...]:
     # For generating jungle biome.
     biome = np.full((16, 16), 128)
 
@@ -217,10 +219,11 @@ def __gen_jungles(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...]]:
 
 
 @cache
-def __placer(range_: int, block_id: int, co_ords_arr: np.ndarray, main: np.ndarray) -> Tuple[Tuple[int, ...]]:
+def __placer(range_: int, block_id: int, co_ords_arr: Tuple[Tuple[int, ...], ...], main: Tuple[Tuple[int, ...], ...]
+             ) -> Tuple[Tuple[int, ...], ...]:
     # For adding chain of blocks to a chunk.
     co_ords_arr_ = deepcopy(co_ords_arr)
-    main = np.asarray(main)
+    main_arr = np.asarray(main)
     for co_ord_arr_ in co_ords_arr_:
         x_inc = 0
         y_inc = 0
@@ -232,28 +235,26 @@ def __placer(range_: int, block_id: int, co_ords_arr: np.ndarray, main: np.ndarr
                 y_inc += 1
 
             if co_ord_arr_[0] + x_inc < 16 and co_ord_arr_[1] + y_inc < 16:
-                main[co_ord_arr_[1] + y_inc, co_ord_arr_[0] + x_inc] = block_id
+                main_arr[co_ord_arr_[1] + y_inc, co_ord_arr_[0] + x_inc] = block_id
 
             elif co_ord_arr_[0] + x_inc < 16 and co_ord_arr_[1] + y_inc > 15:
-                main[co_ord_arr_[1], co_ord_arr_[0] + x_inc] = block_id
+                main_arr[co_ord_arr_[1], co_ord_arr_[0] + x_inc] = block_id
 
-            elif co_ord_arr_[0] + x_inc < 16 and co_ord_arr_[1] + y_inc > 15:
-                main[co_ord_arr_[1] + y_inc, co_ord_arr_[0]] = block_id
-    main = tuple(map(tuple, main))
+            elif co_ord_arr_[0] + x_inc > 15 and co_ord_arr_[1] + y_inc < 16:
+                main_arr[co_ord_arr_[1] + y_inc, co_ord_arr_[0]] = block_id
 
     return main
 
 
-def gen_world(x_min: Optional[int] = -192, x_max: Optional[int] = 192,
-              y_min: Optional[int] = -160, y_max: Optional[int] = 160) -> \
-        Dict[Tuple[int, ...], Tuple[Tuple[int, ...]]]:
+def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int = 160
+              ) -> Dict[Tuple[int, ...], Tuple[Tuple[int, ...], ...]]:
     """When called without any arguments it generates the initial world.
-       Call with Arguments to generate or load more world.
+    Call with Arguments to generate or load more world.
 
-       :param x_min: The x-axis point from where it has to generate the world.
-       :param x_max: The x-axis point till where it will generate the world.
-       :param y_min: The y-axis point from where it has to generate the world.
-       :param y_max: The y-axis point till where it will generate the world.
+    :param x_min: The x-axis point from where it has to generate the world.
+    :param x_max: The x-axis point till where it will generate the world.
+    :param y_min: The y-axis point from where it has to generate the world.
+    :param y_max: The y-axis point till where it will generate the world.
     """
     world = __gen_empty_chunks(x_min, x_max, y_min, y_max)
     free_chunks_horizontal = 24
@@ -275,7 +276,7 @@ def gen_world(x_min: Optional[int] = -192, x_max: Optional[int] = 192,
     biomes = dict(enumerate(zip(biomes_area, biomes_nf)))
     biomes: Dict[int, Tuple[int, Callable[..., np.ndarray]]]
     i = 0
-    for co_ords, chunk in world.items():
+    for co_ords, _ in world.items():
         # generating sky
         if co_ords[3] >= 80:
             world[co_ords] = __sky_gen()

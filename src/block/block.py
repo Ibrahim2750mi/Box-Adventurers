@@ -1,7 +1,9 @@
+import time
 from pathlib import Path
 
 import arcade
 from PIL import ImageEnhance
+
 
 class BreakMask(arcade.Sprite):
     def __init__(self, *args, **kwargs):
@@ -9,7 +11,7 @@ class BreakMask(arcade.Sprite):
         self.break_state = -1
         self.textures = []
         graphics = Path("assets/game_graphics")
-        for asset in graphics:
+        for asset in graphics.iterdir():
             self.textures.append(arcade.Sprite(asset))
 
     def add_break_state(self):
@@ -20,9 +22,11 @@ class BreakMask(arcade.Sprite):
         self.break_state = 0
         self.set_texture(self.textures[self.break_state])
 
+
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, place_sound, *args, **kwargs):
-        super().__init__(*args, **kwargs, filename=f"assets/game_graphics/{block_id}.png", image_width = width, image_height = height)
+        super().__init__(*args, **kwargs,
+                         filename=f"assets/game_graphics/{block_id}.png", image_width=width, image_height=height)
         arcade.Sound(place_sound).play()
         self.block_id = id
 
@@ -34,15 +38,16 @@ class Block(arcade.Sprite):
         self.break_mask = BreakMask()
         self.bright = bright
         self.breaking_time = breaking_time
-    
+
     def remove(self):
+        # TODO: change this to a better way of removing then assigning to None and create the actual kill function
         self = None
         self.draw = None
         self.kill()
-    
+
     def delete(self):
-        self.remove() # alias of `remove`
-    
+        self.remove()  # alias of `remove`
+
     def hp_set(self, val):
         if val <= 0:
             self.remove()
@@ -60,4 +65,3 @@ class Block(arcade.Sprite):
         self.bright = bright
         enhancer = ImageEnhance.Brightness(self.texture.image)
         self.texture.image = enhancer.enhance(bright)
-
