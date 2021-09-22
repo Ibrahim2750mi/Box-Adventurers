@@ -31,4 +31,4 @@ repos:
     rev: v1.5.7
     hooks:
       - id: autopep8
-        args: [-i, --max-line-length=120]
+        args: [-i, --max-line-length=120, -a]

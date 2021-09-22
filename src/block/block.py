@@ -53,7 +53,7 @@ class Block(arcade.Sprite):
         return arcade.check_for_collision_with_lists(self, spritelists)
 
     def break_anim(self, val):
-        self.hpset(val)
+        self.hp_set(val)
         # self.break_mask.add_break_state()
         time.sleep(self.breaking_time)
 
