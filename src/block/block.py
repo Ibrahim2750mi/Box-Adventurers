@@ -24,18 +24,22 @@ class BreakMask(arcade.Sprite):
 
 
 class Block(arcade.Sprite):
-    def __init__(self, width, height, breaking_time, hp, block_id, bright, place_sound, *args, **kwargs):
+    def __init__(self, width, height, breaking_time, hp, block_id, bright, place_sound, *args, scale=1,
+                 center_x=0, center_y=0, **kwargs):
+        path = Path(__file__).parent.joinpath(f"../../assets/Sprites/{block_id}.png")
         super().__init__(*args, **kwargs,
-                         filename=f"assets/game_graphics/{block_id}.png", image_width=width, image_height=height)
-        arcade.Sound(place_sound).play()
-        self.block_id = id
+                         filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
+                         image_width=width, image_height=height)
+        self.place_sound = place_sound
+        # arcade.Sound(place_sound).play()
+        self.block_id = block_id
 
         self.width = width
         self.height = height
         self.x = self.center_x
         self.y = self.center_y
         self.hp = hp
-        self.break_mask = BreakMask()
+        # self.break_mask = BreakMask()
         self.bright = bright
         self.breaking_time = breaking_time
 
@@ -50,7 +54,7 @@ class Block(arcade.Sprite):
 
     def break_anim(self, val):
         self.hpset(val)
-        self.break_mask.add_break_state()
+        # self.break_mask.add_break_state()
         time.sleep(self.breaking_time)
 
     def bright_set(self, bright):

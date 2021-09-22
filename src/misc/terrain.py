@@ -6,6 +6,7 @@ from random import choice, choices, randint
 from typing import Any, Callable, Dict, NewType, Tuple
 
 import numpy as np
+import numpy.typing as npt
 
 # sky = 128
 # clouds = 129
@@ -51,11 +52,12 @@ def __tree(tree_type: Hex, jungle: bool = False) -> np.ndarray:
     int_tree_type = int(tree_type, 16)
     t[0:3 + k, 0:3 + k] = int_tree_type
     t[3 + k:6 + k * 2, k] = int_tree_type + 1
+    t[t == 0] = 128
     return t
 
 
 @cache
-def __volcano(volcano_w: int) -> np.ndarray[Any, Any]:
+def __volcano(volcano_w: int) -> npt.NDArray[Any]:
     # Function to generate a numpy volcano
     n_factor = volcano_w / 2
     volcano_h = ceil(n_factor)
@@ -208,7 +210,7 @@ def __gen_jungles(y_max: int, tree_type: int) -> Tuple[Tuple[int, ...], ...]:
     if y_max >= 32:
         no_of_trees = randint(2, 3)
         for i in range(no_of_trees):
-            biome[0:6, 0 + i * 5: 5 + i * 5] = __tree(tree_type, True)
+            biome[0:10, 0 + i * 5: 5 + i * 5] = __tree(tree_type, True)
 
     biome = tuple(map(tuple, biome))
     mossy_dirt_co_ords = tuple(map(tuple, np.random.randint(16, size=(10, 2))))
@@ -274,7 +276,7 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
             biomes_area[i] += int(free_chunks_horizontal / no_of_biomes) * 5
 
     biomes = dict(enumerate(zip(biomes_area, biomes_nf)))
-    biomes: Dict[int, Tuple[int, Callable[..., np.ndarray]]]
+    biomes: Dict[int, Tuple[int, Callable[..., npt.NDArray[np.int_]]]]
     i = 0
     for co_ords, _ in world.items():
         # generating sky

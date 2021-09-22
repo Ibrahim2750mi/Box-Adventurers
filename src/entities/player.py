@@ -1,5 +1,6 @@
 from arcade import key
-from entity import Entity
+
+from .entity import Entity
 
 
 class Player(Entity):
