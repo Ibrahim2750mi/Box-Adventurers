@@ -42,7 +42,7 @@ class Block(arcade.Sprite):
 
     def hp_set(self, val):
         if val <= 0:
-            self.remove()
+            self.kill()
         else:
             self.hp = val
 
