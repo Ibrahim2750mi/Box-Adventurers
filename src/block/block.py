@@ -36,17 +36,9 @@ class Block(arcade.Sprite):
         self.y = self.center_y
         self.hp = hp
         self.break_mask = BreakMask()
+        self.sprite_list = arcade.SpriteList(self, self.break_mask)
         self.bright = bright
         self.breaking_time = breaking_time
-
-    def remove(self):
-        # TODO: change this to a better way of removing then assigning to None and create the actual kill function
-        self = None
-        self.draw = None
-        self.kill()
-
-    def delete(self):
-        self.remove()  # alias of `remove`
 
     def hp_set(self, val):
         if val <= 0:
@@ -58,7 +50,8 @@ class Block(arcade.Sprite):
         return arcade.check_for_collision_with_lists(self, spritelists)
 
     def break_anim(self, val):
-        self.break_mask.add_break_state
+        self.hpset(val)
+        self.break_mask.add_break_state()
         time.sleep(self.breaking_time)
 
     def bright_set(self, bright):
