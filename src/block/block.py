@@ -36,7 +36,6 @@ class Block(arcade.Sprite):
         self.y = self.center_y
         self.hp = hp
         self.break_mask = BreakMask()
-        self.sprite_list = arcade.SpriteList(self, self.break_mask)
         self.bright = bright
         self.breaking_time = breaking_time
 
