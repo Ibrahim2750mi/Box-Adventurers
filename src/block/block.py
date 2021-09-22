@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import arcade
+from PIL import ImageEnhance
 
 class BreakMask(arcade.Sprite):
     def __init__(self, *args, **kwargs):
@@ -20,18 +21,18 @@ class BreakMask(arcade.Sprite):
         self.set_texture(self.textures[self.break_state])
 
 class Block(arcade.Sprite):
-    def __init__(self, width, height, breaking_time, hp, id, lightning, place_sound, *args, **kwargs):
-        super().__init__(*args, **kwargs, image_width = width, image_height = height)
+    def __init__(self, width, height, breaking_time, hp, block_id, bright, place_sound, *args, **kwargs):
+        super().__init__(*args, **kwargs, filename=f"assets/game_graphics/{block_id}.png", image_width = width, image_height = height)
         arcade.Sound(place_sound).play()
+        self.block_id = id
 
         self.width = width
         self.height = height
         self.x = self.center_x
         self.y = self.center_y
         self.hp = hp
-        self.id = id
         self.break_mask = BreakMask()
-        self.lightning = lightning
+        self.bright = bright
         self.breaking_time = breaking_time
     
     def remove(self):
@@ -54,4 +55,9 @@ class Block(arcade.Sprite):
     def break_anim(self, val):
         self.break_mask.add_break_state
         time.sleep(self.breaking_time)
+
+    def bright_set(self, bright):
+        self.bright = bright
+        enhancer = ImageEnhance.Brightness(self.texture.image)
+        self.texture.image = enhancer.enhance(bright)
 
