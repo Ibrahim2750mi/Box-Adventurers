@@ -134,7 +134,7 @@ def __generate_lower_mine() -> npt.NDArray[np.int_]:
 
 def __gen_forest(y: int, y_max: int) -> npt.NDArray[np.int_]:
     # For generating forest biome.
-    tree_type = choice(('0x88', '0x8a', '0x8c', '0x8e'))
+    tree_type = choice(('0x88', '0x8a', '0x8c'))
     if y_max - 128 > y >= y_max - 160:
         biome = np.full((16, 16), 131)
     else:
@@ -170,12 +170,12 @@ def __gen_desert(y: int, y_max: int) -> npt.NDArray[np.int_]:
         biome = np.full((16, 16), 128)
 
     if y_max - 128 >= y > y_max - 144:
-        no_of_cactus = randint(3, 5)
+        no_of_cactus = randint(1, 5)
         no_of_dead_bush = randint(2, 3)
-        for i in range(no_of_cactus):
-            biome[13:16, 0 + i * 3: 1 + i * 3] = 153
         for i in range(no_of_dead_bush):
             biome[15:16, 1 + i * 4:2 + i * 4] = 154
+        for i in range(no_of_cactus):
+            biome[13:16, 0 + i * 3: 1 + i * 3] = 153
 
     biome = biome
     return biome

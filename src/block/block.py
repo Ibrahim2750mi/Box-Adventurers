@@ -10,7 +10,7 @@ class BreakMask(arcade.Sprite):
         super().__init__(*args, **kwargs)
         self.break_state = -1
         self.textures = []
-        graphics = Path("assets/game_graphics")
+        graphics = Path("../../assets/animations")
         for asset in graphics.iterdir():
             self.textures.append(arcade.Sprite(asset))
 
@@ -33,7 +33,6 @@ class Block(arcade.Sprite):
         # self.place_sound = place_sound
         # arcade.Sound(place_sound).play()
         self.block_id = block_id
-
         self.width = width
         self.height = height
         self.x = self.center_x

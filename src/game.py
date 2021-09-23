@@ -47,16 +47,16 @@ class Game(arcade.Window):
     def setup_world(self):
         self.block_list = arcade.SpriteList()
         self.background_list = arcade.SpriteList()
-        world = gen_world(0, 384, 0, 320)
+        world = gen_world(-160, 160, 0, 320)
         for k, chunk in world.items():
             for inc_y, chunk_row in enumerate(chunk):
                 for inc_x, block in enumerate(chunk_row):
                     if block > 129:
-                        self.block_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False, False,
+                        self.block_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False,
                                                      center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
                                                      center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
                     else:
-                        self.background_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False,
+                        self.background_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block,
                                                           False, center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
                                                           center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
 
@@ -66,7 +66,7 @@ class Game(arcade.Window):
         # Set up the player
         self.player_sprite = Player(":resources:images/animated_characters/female_person/"
                                     "femalePerson_idle.png",
-                                    SPRITE_SCALING, 0, 5120, SCREEN_WIDTH,
+                                    SPRITE_SCALING, 0, 3112, SCREEN_WIDTH,
                                     SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
         self.player_list.append(self.player_sprite)
 
@@ -83,7 +83,6 @@ class Game(arcade.Window):
         self.player_list.draw()
 
         self.camera.use()
-
         # Show distance at bottom left of the screen.
         distance = self.player_sprite.right
         output = f"Distance: {distance}"
@@ -106,6 +105,7 @@ class Game(arcade.Window):
 
         self.physics_engine.update()
         self.camera.center_camera_to_player(self.player_sprite)
+        print(self.player_sprite.center_y, self.player_sprite.center_x)
 
 
 def main() -> None:
