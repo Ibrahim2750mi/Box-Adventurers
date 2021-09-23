@@ -1,5 +1,14 @@
+from enum import Enum, auto
+from typing import Optional
+
 from arcade import key
-from entity import Entity
+
+from .entity import Entity
+
+
+class Direction(Enum):
+    LEFT = auto()
+    RIGHT = auto()
 
 
 class Player(Entity):
@@ -34,6 +43,7 @@ class Player(Entity):
         self.screen_height = screen_height
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
+        self.direction: Optional[Direction] = None
 
     def update(self) -> None:
         self.check_bounds()
@@ -67,8 +77,10 @@ class Player(Entity):
                 self.change_y = self.jump_speed
         elif key_pressed == key.LEFT:
             self.change_x = -self.movement_speed
+            self.direction = Direction.LEFT
         elif key_pressed == key.RIGHT:
             self.change_x = self.movement_speed
+            self.direction = Direction.RIGHT
 
     def on_key_release(self, key_released: int, modifiers: int) -> None:
         """Called when the user releases a key.
@@ -80,3 +92,4 @@ class Player(Entity):
         """
         if key_released in (key.LEFT, key.RIGHT):
             self.change_x = 0
+            self.direction = None
