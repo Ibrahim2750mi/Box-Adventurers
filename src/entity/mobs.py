@@ -12,7 +12,7 @@ class Mob(arcade.Sprite):
         self.drops = drops
 
     def random_move(self: Any) -> None:
-        self.change_x += random.choices([0, 24, -24], weights=[3, 1, 1])
+        self.change_x += random.choices([0, 3, -3], weights=[3, 1, 1])
 
     def kill(self: Any) -> List:
         return self.drops
@@ -38,3 +38,18 @@ class Sheep(Mob):
         arcade.Sprite.__init__(
             self, "assets/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
         )
+
+
+class Chicken(Mob):
+    def __init__(
+        self: Any, x: int, y: int, health: int, drops: List[Tuple[str, int]]
+    ) -> None:
+
+        super().__init__(health, drops)
+        arcade.Sprite.__init__(
+            self, "assets/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
+        )
+
+
+# FIXME Right now we are taking in the drops list in __init__, but eventually
+# we can fix the lists, once the item system is sorted.
