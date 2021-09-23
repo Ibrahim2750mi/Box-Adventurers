@@ -53,12 +53,12 @@ class Game(arcade.Window):
                 for inc_x, block in enumerate(chunk_row):
                     if block > 129:
                         self.block_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False, False,
-                                                     center_x=(k[1] + inc_x) * SPRITE_PIXEL_SIZE,
-                                                     center_y=(k[3] + inc_y) * SPRITE_PIXEL_SIZE))
+                                                     center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
+                                                     center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
                     else:
                         self.background_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False,
-                                                          False, center_x=(k[1] + inc_x) * SPRITE_PIXEL_SIZE,
-                                                          center_y=(k[1] + inc_x) * SPRITE_PIXEL_SIZE))
+                                                          False, center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
+                                                          center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
 
     def setup_player(self):
         self.player_list = arcade.SpriteList()
