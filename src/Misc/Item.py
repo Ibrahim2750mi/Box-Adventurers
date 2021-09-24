@@ -14,9 +14,8 @@ class Item(arcade.Sprite):
     def add_ammount(amount: int) -> None:
         self.actual_amount += amount
 
-    def delete_ammount(amount: int) -> None:
+    def delete_ammount(amount: int = 0, all: bool = False) -> None:
         self.actual_amount -= amount
-        if self.actual_amount < 0:
-            self = None
-            self.draw = None
+        if self.actual_amount < 0 or all is True:
             self.kill()
+
