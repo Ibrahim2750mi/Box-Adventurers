@@ -15,7 +15,7 @@ class Mob(arcade.Sprite):
     def random_move(self: Any) -> None:
         self.change_x += random.choices([0, 3, -3], weights=[3, 1, 1])
 
-    def kill(self: Any) -> List:
+    def kill(self: Any) -> List[Item]:
         return [Item(True, 64, actual_amount=amt, block_id=_id) for amt, _id in self.drops]
 
 
