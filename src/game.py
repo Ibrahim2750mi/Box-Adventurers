@@ -1,13 +1,17 @@
+from collections import deque
+from itertools import islice
+
 import arcade
 from arcade import color
 
 from block.block import Block
 from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, SCREEN_HEIGHT,
                     SCREEN_TITLE, SCREEN_WIDTH, SPRITE_PIXEL_SIZE,
-                    SPRITE_SCALING,)
+                    SPRITE_SCALING, VISIBLE_RANGE_MIN, VISIBLE_RANGE_MAX)
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.terrain import gen_world
+from misc.chunk import HorizontalChunk
 
 
 class Game(arcade.Window):
@@ -18,12 +22,59 @@ class Game(arcade.Window):
         super().__init__(width, height, title, resizable=True)
 
         # Initialising arguments
+        self.whole_world: deque = None
         self.physics_engine: arcade.PhysicsEnginePlatformer = None
         self.block_list: arcade.SpriteList = None
         self.background_list: arcade.SpriteList = None
         self.player_list: arcade.SpriteList = None
         self.player_sprite: Player = None
         self.camera: CustomCamera = None
+        self.loaded_chunks: dict = None
+
+    def __add_blocks(self, h_chunk: HorizontalChunk):
+        for block in h_chunk:
+            if block.block_id > 129:
+                self.block_list.append(block)
+            else:
+                self.background_list.append(block)
+
+    def optimise(self):
+        if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() \
+                or self.player_sprite.chunk - 1 not in self.loaded_chunks.keys():
+
+            if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys():
+                key = tuple(self.loaded_chunks.keys())[0]
+                blocks = self.loaded_chunks[key][0]
+                blocks_bg = self.loaded_chunks[key][1]
+                del(self.loaded_chunks[key])
+
+                self.block_list = islice(self.block_list, blocks, len(self.block_list))
+
+                self.background_list = islice(self.background_list, blocks_bg, len(self.background_list))
+                chunk_index = self.player_sprite.chunk + 1
+
+            elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys():
+                key = tuple(self.loaded_chunks.keys())[-1]
+                blocks = self.loaded_chunks[key][0]
+                blocks_bg = self.loaded_chunks[key][1]
+                del(self.loaded_chunks[key])
+
+                self.block_list = islice(self.block_list, blocks)
+                self.background_list = islice(self.background_list, blocks_bg)
+                chunk_index = self.player_sprite.chunk - 1
+
+            h_chunk = self.whole_world[chunk_index]
+            h_chunk: HorizontalChunk
+            self.loaded_chunks[chunk_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
+
+            temp_block_list = arcade.SpriteList()
+            temp_block_list.extend(self.block_list)
+            self.block_list = temp_block_list
+
+            temp_block_bg_list = arcade.SpriteList()
+            temp_block_bg_list.extend(self.background_list)
+            self.background_list = temp_block_bg_list
+            self.__add_blocks(h_chunk)
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
@@ -47,18 +98,21 @@ class Game(arcade.Window):
     def setup_world(self):
         self.block_list = arcade.SpriteList()
         self.background_list = arcade.SpriteList()
+
+        self.whole_world = deque()
+        self.loaded_chunks = {}
+        for n in range(-10, 10):
+            self.whole_world.append(HorizontalChunk(n * 16))
+
         world = gen_world(-160, 160, 0, 320)
         for k, chunk in world.items():
-            for inc_y, chunk_row in enumerate(chunk):
-                for inc_x, block in enumerate(chunk_row):
-                    if block > 129:
-                        self.block_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False,
-                                                     center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
-                                                     center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
-                    else:
-                        self.background_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block,
-                                                          False, center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
-                                                          center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
+            self.whole_world[int(k[1] / 16) + 10][0] = chunk
+
+        for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 10, int(VISIBLE_RANGE_MAX / 16) + 10):
+            h_chunk = self.whole_world[visible_index]
+            h_chunk: HorizontalChunk
+            self.loaded_chunks[visible_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
+            self.__add_blocks(h_chunk)
 
     def setup_player(self):
         self.player_list = arcade.SpriteList()
@@ -104,8 +158,8 @@ class Game(arcade.Window):
         """ Movement and game logic """
 
         self.physics_engine.update()
+        self.optimise()
         self.camera.center_camera_to_player(self.player_sprite)
-        print(self.player_sprite.center_y, self.player_sprite.center_x)
 
 
 def main() -> None:

@@ -93,3 +93,7 @@ class Player(Entity):
         if key_released in (key.LEFT, key.RIGHT):
             self.change_x = 0
             self.direction = None
+
+    @property
+    def chunk(self):
+        return int(self.center_x/128) + 10
