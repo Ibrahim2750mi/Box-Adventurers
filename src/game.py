@@ -1,4 +1,5 @@
 from collections import deque
+from functools import cache
 from itertools import islice
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from entities.player import Player
 from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
 from misc.terrain import gen_world
+
 
 class Game(arcade.Window):
     """Base game class"""
@@ -31,6 +33,7 @@ class Game(arcade.Window):
         self.camera: CustomCamera = None
         self.loaded_chunks: dict = None
 
+    @cache
     def __add_blocks(self, h_chunk: HorizontalChunk):
         for block in h_chunk:
             try:
@@ -40,6 +43,42 @@ class Game(arcade.Window):
                     self.background_list.append(block)
             except ValueError:
                 pass
+
+    @cache
+    def __add_chunk(self, h_chunk: HorizontalChunk, insert_i: bool, block_list_: list, background_list_: list):
+
+        temp_block_list = arcade.SpriteList()
+        if insert_i:
+            for block in h_chunk:
+                if block.block_id > 129:
+                    temp_block_list.append(block)
+        try:
+            temp_block_list.extend(block_list_)
+        except ValueError:
+            for block in self.block_list:
+                try:
+                    temp_block_list.append(block)
+                except ValueError:
+                    pass
+        self.block_list = temp_block_list
+
+        temp_block_bg_list = arcade.SpriteList()
+        if insert_i:
+            for block in h_chunk:
+                if block.block_id <= 129:
+                    temp_block_bg_list.append(block)
+        try:
+            temp_block_bg_list.extend(background_list_)
+        except ValueError:
+            for block in self.background_list:
+                try:
+                    temp_block_bg_list.append(block)
+                except ValueError:
+                    pass
+        self.background_list = temp_block_bg_list
+        if not insert_i:
+            self.__add_blocks(h_chunk)
+        self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite, [self.block_list], GRAVITY)
 
     def optimise(self):
         if (self.player_sprite.chunk + 1 not in self.loaded_chunks.keys(),
@@ -81,39 +120,7 @@ class Game(arcade.Window):
             else:
                 h_chunk: HorizontalChunk
                 self.loaded_chunks[chunk_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
-
-                temp_block_list = arcade.SpriteList()
-                if insert_i:
-                    for block in h_chunk:
-                        if block.block_id > 129:
-                            temp_block_list.append(block)
-                try:
-                    temp_block_list.extend(block_list_)
-                except ValueError:
-                    for block in self.block_list:
-                        try:
-                            temp_block_list.append(block)
-                        except ValueError:
-                            pass
-                self.block_list = temp_block_list
-
-                temp_block_bg_list = arcade.SpriteList()
-                if insert_i:
-                    for block in h_chunk:
-                        if block.block_id <= 129:
-                            temp_block_bg_list.append(block)
-                try:
-                    temp_block_bg_list.extend(background_list_)
-                except ValueError:
-                    for block in self.background_list:
-                        try:
-                            temp_block_bg_list.append(block)
-                        except ValueError:
-                            pass
-                self.background_list = temp_block_bg_list
-                if not insert_i:
-                    self.__add_blocks(h_chunk)
-                self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite, [self.block_list], GRAVITY)
+                self.__add_chunk(h_chunk, insert_i, block_list_, background_list_)
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
