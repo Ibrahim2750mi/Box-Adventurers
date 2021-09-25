@@ -4,7 +4,8 @@ from typing import Optional
 
 from arcade import key
 
-from .entity import Entity
+from entities.entity import Entity
+from misc.inventory import Inventory
 
 
 class Direction(Enum):
@@ -40,12 +41,13 @@ class Player(Entity):
         """
         path = Path(__file__).parent.joinpath(f"../../assets/mobs/{image_file}.png")
         super().__init__(
-            str(path), scale*9/2, center_x, center_y, flipped_horizontally)
+            str(path), scale * 9 / 2, center_x, center_y, flipped_horizontally)
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
+        self.inventory = Inventory()
         self.last_faced_dir = None
 
     def update(self) -> None:
@@ -101,4 +103,4 @@ class Player(Entity):
 
     @property
     def chunk(self):
-        return int(self.center_x/224) + 31
+        return int(self.center_x / 224) + 31

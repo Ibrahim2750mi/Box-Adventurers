@@ -31,8 +31,9 @@ class Game(arcade.Window):
         self.player_list: arcade.SpriteList = None
         self.player_sprite: Player = None
         self.camera: CustomCamera = None
+        self.hud_camera: arcade.Camera = None
         self.loaded_chunks: dict = None
-        self.bg_music: arcade.Sound = None 
+        self.bg_music: arcade.Sound = None
 
     @cache
     def __add_blocks(self, h_chunk: HorizontalChunk):
@@ -127,13 +128,16 @@ class Game(arcade.Window):
         """Set up the game and initialize the variables."""
 
         self.setup_world()
-        self.setup_player()
 
         self.camera = CustomCamera(self.width, self.height, self)
+        self.hud_camera = arcade.Camera(self.width, self.height)
 
-        self.physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(self.player_sprite,
-                                                                                             [self.block_list],
-                                                                                             gravity_constant=GRAVITY)
+        self.setup_player()
+
+        self.physics_engine = arcade.PhysicsEnginePlatformer(
+            self.player_sprite,
+            [self.block_list],
+            gravity_constant=GRAVITY)
 
         arcade.set_background_color(color.AMAZON)
 
@@ -181,6 +185,7 @@ class Game(arcade.Window):
                                     PLAYER_SCALING, 0, 3112, SCREEN_WIDTH,
                                     SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
         self.player_list.append(self.player_sprite)
+        self.player_sprite.inventory.setup_coords(self.camera.position)
 
     def on_draw(self) -> None:
         """
@@ -189,16 +194,13 @@ class Game(arcade.Window):
         # This command has to happen before we start drawing
         arcade.start_render()
 
-        # Draw the sprites.
+        self.camera.use()
         self.background_list.draw()
         self.block_list.draw()
         self.player_list.draw()
 
-        self.camera.use()
-        # Show distance at bottom left of the screen.
-        distance = self.player_sprite.right
-        output = f"Distance: {distance}"
-        arcade.draw_text(output, self.view_left + 10, self.view_bottom + 20, color.WHITE, 14)
+        self.hud_camera.use()
+        self.player_sprite.inventory.draw()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """
@@ -207,21 +209,21 @@ class Game(arcade.Window):
         self.player_sprite.on_key_press(key, modifiers, self.physics_engine.can_jump())
 
     def on_key_release(self, key: int, modifiers: int) -> None:
-        """
-        Called when the user presses a mouse button.
-        """
+        """Called when the user presses a mouse button."""
         self.player_sprite.on_key_release(key, modifiers)
 
     def on_update(self, delta_time: float) -> None:
-        """ Movement and game logic """
+        """Movement and game logic."""
 
         self.physics_engine.update()
-        self.optimise()
+        self.player_sprite.inventory.update()
         self.camera.center_camera_to_player(self.player_sprite)
+        # print(self.player_sprite.center_y, self.player_sprite.center_x)
+        self.optimise()
 
 
 def main() -> None:
-    """ Main function """
+    """Entry point to the game."""
     window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
     window.setup()
     arcade.run()
