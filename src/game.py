@@ -33,34 +33,43 @@ class Game(arcade.Window):
 
     def __add_blocks(self, h_chunk: HorizontalChunk):
         for block in h_chunk:
-            if block.block_id > 129:
-                self.block_list.append(block)
-            else:
-                self.background_list.append(block)
+            try:
+                if block.block_id > 129:
+                    self.block_list.append(block)
+                    print(block.block_id)
+                else:
+                    self.background_list.append(block)
+                    print(block.block_id)
+            except ValueError:
+                pass
 
     def optimise(self):
-        if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() \
-                or self.player_sprite.chunk - 1 not in self.loaded_chunks.keys():
+        if (self.player_sprite.chunk + 1 not in self.loaded_chunks.keys(),
+            self.player_sprite.last_faced_dir == "right") == (True, True) \
+                or (self.player_sprite.chunk - 1 not in self.loaded_chunks.keys(),
+                    self.player_sprite.last_faced_dir == "left") == (True, True):
 
-            if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys():
+            if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() and \
+                    self.player_sprite.last_faced_dir == "right":
                 key = tuple(self.loaded_chunks.keys())[0]
                 blocks = self.loaded_chunks[key][0]
                 blocks_bg = self.loaded_chunks[key][1]
-                del(self.loaded_chunks[key])
-
+                del (self.loaded_chunks[key])
+                insert_i = False
                 self.block_list = islice(self.block_list, blocks, len(self.block_list))
 
                 self.background_list = islice(self.background_list, blocks_bg, len(self.background_list))
                 chunk_index = self.player_sprite.chunk + 1
 
-            elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys():
+            elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys() and \
+                    self.player_sprite.last_faced_dir == "left":
                 key = tuple(self.loaded_chunks.keys())[-1]
                 blocks = self.loaded_chunks[key][0]
                 blocks_bg = self.loaded_chunks[key][1]
-                del(self.loaded_chunks[key])
-
-                self.block_list = islice(self.block_list, blocks)
-                self.background_list = islice(self.background_list, blocks_bg)
+                del (self.loaded_chunks[key])
+                insert_i = True
+                self.block_list = islice(self.block_list, len(self.block_list) - blocks)
+                self.background_list = islice(self.background_list, len(self.background_list) - blocks_bg)
                 chunk_index = self.player_sprite.chunk - 1
 
             h_chunk = self.whole_world[chunk_index]
@@ -68,13 +77,38 @@ class Game(arcade.Window):
             self.loaded_chunks[chunk_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
 
             temp_block_list = arcade.SpriteList()
-            temp_block_list.extend(self.block_list)
+            if insert_i:
+                for block in h_chunk:
+                    if block.block_id > 129:
+                        temp_block_list.append(block)
+                        print(block.block_id)
+            try:
+                temp_block_list.extend(self.block_list)
+            except ValueError:
+                for block in self.block_list:
+                    try:
+                        temp_block_list.append(block)
+                    except ValueError:
+                        pass
             self.block_list = temp_block_list
 
             temp_block_bg_list = arcade.SpriteList()
-            temp_block_bg_list.extend(self.background_list)
+            if insert_i:
+                for block in h_chunk:
+                    if block.block_id <= 129:
+                        temp_block_bg_list.append(block)
+                        print(block.block_id)
+            try:
+                temp_block_bg_list.extend(self.background_list)
+            except ValueError:
+                for block in self.background_list:
+                    try:
+                        temp_block_bg_list.append(block)
+                    except ValueError:
+                        pass
             self.background_list = temp_block_bg_list
-            self.__add_blocks(h_chunk)
+            if not insert_i:
+                self.__add_blocks(h_chunk)
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
