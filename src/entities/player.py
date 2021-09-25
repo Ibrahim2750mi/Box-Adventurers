@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from pathlib import Path
 from typing import Optional
 
 from arcade import key
@@ -37,8 +38,9 @@ class Player(Entity):
         :param flipped_horizontally: Should the player sprite be flipped.
         :type flipped_horizontally: bool
         """
+        path = Path(__file__).parent.joinpath(f"../../assets/mobs/{image_file}.png")
         super().__init__(
-            image_file, scale, center_x, center_y, flipped_horizontally)
+            str(path), scale, center_x, center_y, flipped_horizontally)
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.movement_speed = movement_speed
