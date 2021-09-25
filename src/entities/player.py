@@ -99,4 +99,4 @@ class Player(Entity):
 
     @property
     def chunk(self):
-        return int(self.center_x/256) + 10
+        return int(self.center_x/224) + 31
