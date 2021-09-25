@@ -32,6 +32,7 @@ class Game(arcade.Window):
         self.player_sprite: Player = None
         self.camera: CustomCamera = None
         self.loaded_chunks: dict = None
+        self.bg_music: arcade.Sound = None 
 
     @cache
     def __add_blocks(self, h_chunk: HorizontalChunk):
@@ -135,6 +136,10 @@ class Game(arcade.Window):
                                                                                              gravity_constant=GRAVITY)
 
         arcade.set_background_color(color.AMAZON)
+
+        path = Path(__file__).parent.joinpath("../assets/music/main_game_tune.wav")
+        self.bg_music = arcade.Sound(path)
+        self.bg_music.play(loop=True)
 
         self.view_left: int = 0
         self.view_bottom: int = 0
