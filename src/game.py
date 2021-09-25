@@ -64,8 +64,7 @@ class Game(arcade.Window):
         self.player_list = arcade.SpriteList()
 
         # Set up the player
-        self.player_sprite = Player(":resources:images/animated_characters/female_person/"
-                                    "femalePerson_idle.png",
+        self.player_sprite = Player("player",
                                     SPRITE_SCALING, 0, 3112, SCREEN_WIDTH,
                                     SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
         self.player_list.append(self.player_sprite)
