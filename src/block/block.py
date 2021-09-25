@@ -12,7 +12,7 @@ class BreakMask(arcade.Sprite):
         self.textures = []
         graphics = Path("../../assets/animations")
         for asset in graphics.iterdir():
-            self.textures.append(arcade.Sprite(asset))
+            self.textures.append(arcade.Sprite(str(asset)))
 
     def add_break_state(self):
         self.break_state += 1
@@ -26,10 +26,9 @@ class BreakMask(arcade.Sprite):
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,
                  center_x=0, center_y=0, **kwargs):
-        path = Path(__file__).parent.joinpath(f"../../assets/Sprites/{block_id}.png")
-        super().__init__(*args, **kwargs,
-                         filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
-                         image_width=width, image_height=height)
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        super().__init__(filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
+                         image_width=width, image_height=height, *args, **kwargs)
         # self.place_sound = place_sound
         # arcade.Sound(place_sound).play()
         self.block_id = block_id

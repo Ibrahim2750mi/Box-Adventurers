@@ -33,9 +33,10 @@ class Game(arcade.Window):
 
         self.camera = CustomCamera(self.width, self.height, self)
 
-        self.physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(self.player_sprite,
-                                                                                             [self.block_list],
-                                                                                             gravity_constant=GRAVITY)
+        self.physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(
+            self.player_sprite,
+            [self.block_list],
+            gravity_constant=GRAVITY)
 
         arcade.set_background_color(color.AMAZON)
 

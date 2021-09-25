@@ -1,21 +1,15 @@
-class Item(arcade.Sprite):
-    def __init__(stackable : bool, max_stack: int, inventory_slot: tuple, actual_amount: int, block_id: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+from pathlib import Path
+
+from arcade import Sprite
+
+from config import SPRITE_SCALING
+
+
+class Item(Sprite):
+    def __init__(self, name: str, stackable: bool, block_id: int, *args, **kwargs):
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        super().__init__(filename=str(path), scale=SPRITE_SCALING, *args, **kwargs)
+        self.name = name
         self.stackable = stackable
-        self.max_stack = max_stack
-        self.inventory_slot = inventory_slot
-        self.actaul_amout = actual_amount
+        self.amount = 1
         self.block_id = block_id
-
-    def change_inventory_slot(position: tuple) -> None:
-        self.inventory_slot = position
-
-
-    def add_ammount(amount: int) -> None:
-        self.actual_amount += amount
-
-    def delete_ammount(amount: int = 0, all: bool = False) -> None:
-        self.actual_amount -= amount
-        if self.actual_amount < 0 or all is True:
-            self.kill()
-

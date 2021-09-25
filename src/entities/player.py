@@ -3,7 +3,8 @@ from typing import Optional
 
 from arcade import key
 
-from .entity import Entity
+from entities.entity import Entity
+from misc.inventory import Inventory
 
 
 class Direction(Enum):
@@ -44,6 +45,7 @@ class Player(Entity):
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
+        self.inventory = Inventory()
 
     def update(self) -> None:
         self.check_bounds()
