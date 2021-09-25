@@ -10,23 +10,6 @@ BREAK_TEXTURES_PATH = Path("assets/animations")
 BREAK_TEXTURES = [Image.open(f) for f in BREAK_TEXTURES_PATH.iterdir()]
 
 
-# class BreakMask(arcade.Sprite):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-#         self.break_state = -1
-#         self.textures = []
-#         for asset in graphics.iterdir():
-#             self.textures.append(arcade.Sprite(asset))
-
-#     def add_break_state(self):
-#         self.break_state += 1
-#         self.set_texture(self.textures[self.break_state])
-
-#     def reset_break_state(self):
-#         self.break_state = 0
-#         self.set_texture(self.textures[self.break_state])
-
-
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,
                  center_x=0, center_y=0, **kwargs):
