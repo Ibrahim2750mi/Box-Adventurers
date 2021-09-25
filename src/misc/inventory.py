@@ -18,8 +18,7 @@ class Inventory(Sprite):
         path = Path(__file__).parent.joinpath("../../assets/sprites/inventory.png")
         super().__init__(filename=str(path), center_x=0, center_y=0, scale=INVENTORY_SCALING)
         self.max_slots: int = MAX_SLOTS
-        self.slots: dict[int, Optional[Item]] = {
-            i: None for i in range(1, self.max_slots + 1)}
+        self.slots: dict[int, Optional[Item]] = {i: None for i in range(1, self.max_slots + 1)}
         self.filled_slots = 0
 
     def add(self, item: Item) -> None:
@@ -41,6 +40,10 @@ class Inventory(Sprite):
             self.slots[self.get_free_slot()] = item
             self.filled_slots += 1
 
+    def setup_coords(self, pos: Vec2) -> None:
+        self.center_x = pos[0] + SCREEN_WIDTH / 2
+        self.center_y = pos[1] + self.height / 2
+
     def get_free_slot(self) -> int:
         for slot in self.slots:
             if self.slots[slot] is None:
@@ -52,11 +55,6 @@ class Inventory(Sprite):
         for slot, item in self.slots.items():
             if item is not None:
                 item.draw(slot, self.center_x, self.center_y, self.width, self.height)
-
-    def update(self, pos: Vec2) -> None:
-        super().update()
-        self.center_x = pos[0] + SCREEN_WIDTH / 2
-        self.center_y = pos[1] + self.height / 2
 
     def remove(self, item: Item) -> None:
         for i in range(len(self.slots), 0, -1):

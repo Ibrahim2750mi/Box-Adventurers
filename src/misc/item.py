@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from arcade import Sprite
+from arcade import Sprite, draw_text
+from arcade.csscolor import WHITE
 
 from config import ICON_SIZE, INVENTORY_SCALING
 
@@ -19,3 +20,5 @@ class Item(Sprite):
         super().draw()
         self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
         self.center_y = cen_y - (inv_height / 2) + 2 + 29
+
+        draw_text(str(slot), self.center_x - 20, self.center_y - 20, WHITE, 18)
