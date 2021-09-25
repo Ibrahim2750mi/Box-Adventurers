@@ -46,6 +46,7 @@ class Player(Entity):
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
+        self.last_faced_dir = None
 
     def update(self) -> None:
         self.check_bounds()
@@ -80,9 +81,11 @@ class Player(Entity):
         elif key_pressed == key.LEFT:
             self.change_x = -self.movement_speed
             self.direction = Direction.LEFT
+            self.last_faced_dir = "left"
         elif key_pressed == key.RIGHT:
             self.change_x = self.movement_speed
             self.direction = Direction.RIGHT
+            self.last_faced_dir = "right"
 
     def on_key_release(self, key_released: int, modifiers: int) -> None:
         """Called when the user releases a key.
@@ -95,3 +98,7 @@ class Player(Entity):
         if key_released in (key.LEFT, key.RIGHT):
             self.change_x = 0
             self.direction = None
+
+    @property
+    def chunk(self):
+        return int(self.center_x/224) + 31

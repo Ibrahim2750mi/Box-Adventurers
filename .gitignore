@@ -18,3 +18,6 @@ Pipfile.lock
 .mypy_cache/
 .dmypy.json
 dmypy.json
+
+# world data
+*.npy
