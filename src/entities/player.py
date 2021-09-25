@@ -1,4 +1,5 @@
 from enum import Enum, auto
+from pathlib import Path
 from typing import Optional
 
 from arcade import key
@@ -37,13 +38,15 @@ class Player(Entity):
         :param flipped_horizontally: Should the player sprite be flipped.
         :type flipped_horizontally: bool
         """
+        path = Path(__file__).parent.joinpath(f"../../assets/mobs/{image_file}.png")
         super().__init__(
-            image_file, scale, center_x, center_y, flipped_horizontally)
+            str(path), scale, center_x, center_y, flipped_horizontally)
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
+        self.last_faced_dir = None
 
     def update(self) -> None:
         self.check_bounds()
@@ -78,9 +81,11 @@ class Player(Entity):
         elif key_pressed == key.LEFT:
             self.change_x = -self.movement_speed
             self.direction = Direction.LEFT
+            self.last_faced_dir = "left"
         elif key_pressed == key.RIGHT:
             self.change_x = self.movement_speed
             self.direction = Direction.RIGHT
+            self.last_faced_dir = "right"
 
     def on_key_release(self, key_released: int, modifiers: int) -> None:
         """Called when the user releases a key.
@@ -93,3 +98,7 @@ class Player(Entity):
         if key_released in (key.LEFT, key.RIGHT):
             self.change_x = 0
             self.direction = None
+
+    @property
+    def chunk(self):
+        return int(self.center_x/224) + 31
