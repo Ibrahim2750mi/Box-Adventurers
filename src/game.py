@@ -3,16 +3,17 @@ from itertools import islice
 from pathlib import Path
 
 import arcade
-from arcade import color
 import numpy as np
+from arcade import color
 
-from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, SCREEN_HEIGHT,
-                    SCREEN_TITLE, SCREEN_WIDTH, SPRITE_PIXEL_SIZE,
-                    SPRITE_SCALING, VISIBLE_RANGE_MIN, VISIBLE_RANGE_MAX)
+from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, PLAYER_SCALING,
+                    SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH,
+                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN,)
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
 from misc.terrain import gen_world
+
 
 class Game(arcade.Window):
     """Base game class"""
@@ -140,7 +141,7 @@ class Game(arcade.Window):
 
         self.whole_world = deque()
         self.loaded_chunks = {}
-        path = Path(__file__).parent.joinpath(f"misc/world.npy")
+        path = Path(__file__).parent.joinpath("misc/world.npy")
         try:
             with open(str(path), "rb") as f:
                 self.whole_world = np.load(f, allow_pickle=True)
@@ -166,7 +167,7 @@ class Game(arcade.Window):
 
         # Set up the player
         self.player_sprite = Player("player",
-                                    SPRITE_SCALING, 0, 3112, SCREEN_WIDTH,
+                                    PLAYER_SCALING, 0, 3112, SCREEN_WIDTH,
                                     SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
         self.player_list.append(self.player_sprite)
 
