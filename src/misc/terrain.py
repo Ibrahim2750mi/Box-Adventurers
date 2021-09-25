@@ -3,7 +3,7 @@ from copy import deepcopy
 from functools import cache
 from math import ceil, floor
 from random import choice, choices, randint
-from typing import Callable, Dict, NewType, Tuple, Deque
+from typing import Callable, Deque, Dict, NewType, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -51,8 +51,8 @@ def __tree(tree_type: Hex, jungle: bool = False) -> np.ndarray:
         t = np.zeros((6, 3))
 
     int_tree_type = int(tree_type, 16)
-    t[0:3+k, 0:3+k] = int_tree_type
-    t[3 + k:6 + k * 2, int(k/2) + 1] = int_tree_type + 1
+    t[0:3 + k, 0:3 + k] = int_tree_type
+    t[3 + k:6 + k * 2, int(k / 2) + 1] = int_tree_type + 1
     t[t == 0] = 128
     return t
 
@@ -127,7 +127,6 @@ def __generate_middle_mine(y: int, y_max: int) -> npt.NDArray[np.int_]:
 
 
 def __generate_lower_mine() -> npt.NDArray[np.int_]:
-    # For generating the lower part of the mine.
     mine = np.full((16, 16), 135)
     return mine
 
@@ -207,7 +206,7 @@ def __gen_jungles(y: int, y_max: int) -> npt.NDArray[np.int_]:
     if y_max - 128 >= y > y_max - 144:
         no_of_trees = randint(1, 2)
         for i in range(no_of_trees):
-            biome[6:16, i + i * 5: i+5 + i * 5] = __tree(jungle_tree_type, True)
+            biome[6:16, i + i * 5: i + 5 + i * 5] = __tree(jungle_tree_type, True)
 
     biome = biome
     return biome
@@ -252,7 +251,7 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
     :param y_max: The y-axis point till where it will generate the world.
     """
     world = __gen_empty_chunks(x_min, x_max, y_min, y_max)
-    free_chunks_horizontal = int((abs(x_min) + abs(x_max))/16)
+    free_chunks_horizontal = int((abs(x_min) + abs(x_max)) / 16)
     no_of_biomes = randint(2, 4)
     biomes_choices = [__gen_forest, __gen_plain, __gen_desert, __gen_volcanoes, __gen_jungles]
     biomes_nf = deque()
@@ -271,7 +270,7 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
     i = 0
     for co_ords, _ in world.items():
         # generating sky
-        if co_ords[3] >= y_max-80:
+        if co_ords[3] >= y_max - 80:
             world[co_ords] = __sky_gen()
 
         # generating upper mine
@@ -305,3 +304,9 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
             biomes[i][0] -= 1
 
     return world
+
+
+if __name__ == '__main__':
+    world = gen_world(-496, 496)
+    with open("world.npy", "wb") as f:
+        np.save(f, world, allow_pickle=True)
