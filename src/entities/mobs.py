@@ -27,7 +27,7 @@ class Cow(Mob):
             [(random.randint(1, 4), 300), (random.randint(1, 3), 301)]
         )
         arcade.Sprite.__init__(
-            self, "assets/cow.png", SPRITE_SCALING, center_x=x, center_y=y
+            self, "assets/mobs/cow.png", SPRITE_SCALING, center_x=x, center_y=y
         )
 
 
@@ -38,7 +38,7 @@ class Sheep(Mob):
             health, [(random.randint(1, 4), 302), (random.randint(1, 3), 303)]
         )
         arcade.Sprite.__init__(
-            self, "assets/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
+            self, "assets/mobs/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
         )
 
 
@@ -49,7 +49,7 @@ class Chicken(Mob):
             health, [(random.randint(1, 4), 303), (random.randint(1, 2), 304)]
         )
         arcade.Sprite.__init__(
-            self, "assets/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
+            self, "assets/mobs/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
         )
 
 
