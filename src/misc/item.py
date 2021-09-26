@@ -1,23 +1,25 @@
-import arcade
+from pathlib import Path
+
+from arcade import Sprite, draw_text
+from arcade.csscolor import WHITE
+
+from config import ICON_SIZE, INVENTORY_SCALING
 
 
-class Item(arcade.Sprite):
-    def __init__(self, stackable: bool, max_stack: int, inventory_slot: tuple,
-                 actual_amount: int, block_id: int, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Item(Sprite):
+    def __init__(self, stackable: bool, block_id: int, *args, **kwargs):
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        super().__init__(filename=str(path), scale=INVENTORY_SCALING, *args, **kwargs)
         self.stackable = stackable
-        self.max_stack = max_stack
-        self.inventory_slot = inventory_slot
-        self.actaul_amout = actual_amount
+        self.amount = 1
+        self.width = ICON_SIZE * INVENTORY_SCALING
+        self.height = ICON_SIZE * INVENTORY_SCALING
         self.block_id = block_id
 
-    def change_inventory_slot(self, position: tuple) -> None:
-        self.inventory_slot = position
+    def draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
+        super().draw()
+        self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
+        self.center_y = cen_y - (inv_height / 2) + 2 + 29
 
-    def add_ammount(self, amount: int) -> None:
-        self.actual_amount += amount
-
-    def delete_ammount(self, amount: int = 0, all: bool = False) -> None:
-        self.actual_amount -= amount
-        if self.actual_amount < 0 or all is True:
-            self.kill()
+        draw_text(str(slot), self.center_x - 20, self.center_y - 20, WHITE, 18)
+        draw_text(str(self.amount), self.center_x + 20, self.center_y - 20, WHITE, 10)

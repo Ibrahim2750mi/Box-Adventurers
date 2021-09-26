@@ -9,7 +9,6 @@ from entities.player import Direction, Player
 class CustomCamera(Camera):
     def __init__(self, viewport_width: int = 0, viewport_height: int = 0, window: Optional[Window] = None):
         super().__init__(viewport_width, viewport_height, window)
-        self.move_speed = 0.2
 
     def center_camera_to_player(self, player_sprite: Player) -> None:
         x_offset = self.get_x_offset(player_sprite.direction)
@@ -21,7 +20,7 @@ class CustomCamera(Camera):
         # screen_center_y = max(screen_center_y, 0)
         player_centered = Vec2(screen_center_x, screen_center_y)
 
-        self.move_to(player_centered, 0.1)
+        self.move_to(player_centered, 0.2)
 
     def get_x_offset(self, direction: Optional[Direction]):
         x_offset = 0

@@ -3,7 +3,7 @@ from copy import deepcopy
 from functools import cache
 from math import ceil, floor
 from random import choice, choices, randint
-from typing import Callable, Dict, NewType, Tuple, Deque
+from typing import Callable, Deque, Dict, NewType, Tuple
 
 import numpy as np
 import numpy.typing as npt
@@ -127,7 +127,6 @@ def __generate_middle_mine(y: int, y_max: int) -> npt.NDArray[np.int_]:
 
 
 def __generate_lower_mine() -> npt.NDArray[np.int_]:
-    # For generating the lower part of the mine.
     mine = np.full((16, 16), 135)
     return mine
 
@@ -305,6 +304,7 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
             biomes[i][0] -= 1
 
     return world
+
 
 if __name__ == '__main__':
     world = gen_world(-496, 496)

@@ -1,10 +1,12 @@
 import time
 from pathlib import Path
+from typing import Optional
 
 import arcade
+from arcade.texture import load_texture
 from PIL import Image, ImageEnhance
 
-from src.misc.item import Item
+from misc.item import Item
 
 BREAK_TEXTURES_PATH = Path("assets/animations")
 BREAK_TEXTURES = [Image.open(f) for f in BREAK_TEXTURES_PATH.iterdir()]
@@ -13,11 +15,9 @@ BREAK_TEXTURES = [Image.open(f) for f in BREAK_TEXTURES_PATH.iterdir()]
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,
                  center_x=0, center_y=0, **kwargs):
-        path = Path(__file__).parent.joinpath(
-            f"../../assets/Sprites/{block_id}.png")
-        super().__init__(*args, **kwargs,
-                         filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
-                         image_width=width, image_height=height)
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        super().__init__(filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
+                         image_width=width, image_height=height, *args, **kwargs)
         # self.place_sound = place_sound
         # arcade.Sound(place_sound).play()
         self.block_id = block_id
@@ -59,15 +59,18 @@ class Block(arcade.Sprite):
         enhancer = ImageEnhance.Brightness(self.ORIGINAL_IMAGE)
         self.texture.image = enhancer.enhance(bright)
 
-    def _break(self, delta_time) -> None:
+    def _break(self, delta_time) -> Optional[Item]:
         self.break_time_left -= delta_time
         if self.breaking_time < 0:
             return Item(stackable=True, max_stack=64, inventory_slot=0, actual_amount=1, block_id=self.block_id)
-        else:
-            self.anim_pos += 1
-            self.texture = self.break_textures[self.anim_pos]
+        self.anim_pos += 1
+        self.texture = self.break_textures[self.anim_pos]
 
     def stop_breaking(self) -> None:
         # Reset time and texture
         self.break_time_left = self.breaking_time
         self.texture = self.orig_texture
+
+    def break_(self, block_id) -> None:
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        self.texture = load_texture(path)
