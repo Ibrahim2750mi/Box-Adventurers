@@ -1,10 +1,13 @@
+import gc
 import math
 from collections import deque
 from functools import cache
 from itertools import islice
 from pathlib import Path
+from threading import Thread
 
 import arcade
+import arcade.gui
 import numpy as np
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
@@ -19,12 +22,12 @@ from misc.item import Item
 from misc.terrain import gen_world
 
 
-class Game(arcade.Window):
+class Game(arcade.View):
     """Base game class"""
 
-    def __init__(self, width: int, height: int, title: str) -> None:
+    def __init__(self) -> None:
         """Initializer"""
-        super().__init__(width, height, title, resizable=True)
+        super().__init__()
 
         # Initialising arguments
         self.whole_world: deque = None
@@ -37,6 +40,7 @@ class Game(arcade.Window):
         self.hud_camera: arcade.Camera = None
         self.loaded_chunks: dict = None
         self.bg_music: arcade.Sound = None
+        self.broke_blocks: dict = None
 
         self.break_cooldown = False
         self.place_cooldown = False
@@ -122,22 +126,22 @@ class Game(arcade.Window):
             background_list_ = islice(self.background_list, len(self.background_list) - blocks_bg - 1)
             chunk_index = self.player_sprite.chunk - 1
 
-        try:
-            h_chunk = self.whole_world[chunk_index]
-        except KeyError:
-            pass
-        else:
-            h_chunk: HorizontalChunk
-            self.loaded_chunks[chunk_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
-            self.__add_chunk(h_chunk, insert_i, block_list_, background_list_)
+            try:
+                h_chunk = self.whole_world[chunk_index]
+            except KeyError:
+                pass
+            else:
+                h_chunk: HorizontalChunk
+                self.loaded_chunks[chunk_index] = [h_chunk.other_block_count, h_chunk.bg_block_count]
+                self.__add_chunk(h_chunk, insert_i, block_list_, background_list_)
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
 
         self.setup_world()
 
-        self.camera = CustomCamera(self.width, self.height, self)
-        self.hud_camera = arcade.Camera(self.width, self.height)
+        self.camera = CustomCamera(SCREEN_WIDTH, SCREEN_HEIGHT, self.window)
+        self.hud_camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         self.setup_player()
 
@@ -181,7 +185,7 @@ class Game(arcade.Window):
         for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 31, int(VISIBLE_RANGE_MAX / 16) + 31):
             h_chunk = self.whole_world[visible_index]
             h_chunk: HorizontalChunk
-            self.loaded_chunks[visible_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
+            self.loaded_chunks[visible_index] = [h_chunk.other_block_count, h_chunk.bg_block_count]
             self.__add_blocks(h_chunk)
 
     def setup_player(self) -> None:
@@ -255,18 +259,110 @@ class Game(arcade.Window):
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
+        def local_caller():
+            self.physics_engine.update()
+            self.player_sprite.inventory.update()
+            self.camera.center_camera_to_player(self.player_sprite)
 
-        self.physics_engine.update()
-        self.player_sprite.inventory.update()
-        self.camera.center_camera_to_player(self.player_sprite)
-        # print(self.player_sprite.center_y, self.player_sprite.center_x)
-        self.optimise()
+        t1 = Thread(target=local_caller)
+        t2 = Thread(target=self.optimise)
+        # self.physics_engine.update()
+        # self.player_sprite.inventory.update()
+        # self.camera.center_camera_to_player(self.player_sprite)
+        # # print(self.player_sprite.center_y, self.player_sprite.center_x)
+        # self.optimise()
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
 
 
-def main() -> None:
-    """Entry point to the game."""
-    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    window.setup()
+# --- Method 1 for handling click events,
+# Create a child class.
+class QuitButton(arcade.gui.UIFlatButton):
+    def on_click(self, event: arcade.gui.UIOnClickEvent):
+        arcade.exit()
+
+
+class StartView(arcade.View):
+    def __init__(self):
+        super().__init__()
+
+        # --- Required for all code that uses UI element,
+        # a UIManager to handle the UI.
+        self.manager = arcade.gui.UIManager()
+        self.manager.enable()
+
+        # Set background color
+        # arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
+        self.background = None
+        self.frameNum = 22
+        self.maxFrames = 285  # 390
+
+        print(gc.isenabled())
+
+        # Create a vertical BoxGroup to align buttons
+        self.v_box = arcade.gui.UIBoxLayout()
+
+        # Create the buttons
+        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style={
+                                               "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(start_button.with_space_around(bottom=20))
+
+        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style={
+                                                  "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(settings_button.with_space_around(bottom=20))
+
+        # Again, method 1. Use a child class to handle events.
+        quit_button = QuitButton(text="Quit", width=200, style={
+                                 "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(quit_button)
+
+        # --- Method 2 for handling click events,
+        # assign self.on_click_start as callback
+        start_button.on_click = self.on_click_start
+
+        # --- Method 3 for handling click events,
+        # use a decorator to handle on_click events
+        @settings_button.event("on_click")
+        def on_click_settings(event):
+            print("Settings:", event)
+
+        # Create a widget to hold the v_box widget, that will center the buttons
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="center_x",
+                anchor_y="center_y",
+                child=self.v_box)
+        )
+
+    def on_click_start(self, event):
+        game_view = Game()
+        game_view.setup()
+        self.window.show_view(game_view)
+
+    def on_draw(self):
+        arcade.start_render()
+
+        # background gif
+        # showing the background image
+        self.background = arcade.load_texture(f"./assets/images/out{self.frameNum}.png")
+        arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
+                                      self.background)
+        self.background = None
+        # gc.collect()
+        # changing it to the next frame
+        self.frameNum += 1
+        if self.frameNum > self.maxFrames:
+            self.frameNum = 22
+
+        self.manager.draw()
+
+
+def main():
+    """ Main method """
+    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window.show_view(StartView())
     arcade.run()
 
 
