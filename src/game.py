@@ -131,8 +131,8 @@ class Game(arcade.View):
 
         self.setup_world()
 
-        self.camera = CustomCamera(self.width, self.height, self)
-        self.hud_camera = arcade.Camera(self.width, self.height)
+        self.camera = CustomCamera(SCREEN_WIDTH, SCREEN_HEIGHT, self.window)
+        self.hud_camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
 
         self.setup_player()
 
