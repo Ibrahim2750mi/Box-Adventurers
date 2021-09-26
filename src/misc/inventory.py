@@ -26,16 +26,16 @@ class Inventory(Sprite):
             raise InventoryFullError
         added = False
         if item.stackable:
-            for slot in self.slots:
-                slot_item = self.slots[slot]
+            for i in range(len(self.slots), 0, -1):
+                slot_item = self.slots[i]
                 if slot_item is not None and slot_item.block_id == item.block_id:
                     added = True
                     if slot_item.amount == MAX_STACK:
                         self.slots[self.get_free_slot()] = item
                         self.filled_slots += 1
-                        break
                     else:
                         slot_item.amount += 1
+                    break
         if not added:
             self.slots[self.get_free_slot()] = item
             self.filled_slots += 1
@@ -61,4 +61,6 @@ class Inventory(Sprite):
             slot_item = self.slots[i]
             if slot_item is not None and slot_item.block_id == item.block_id:
                 slot_item.amount -= 1
+                if slot_item.amount == 0:
+                    self.slots[i] = None
                 break

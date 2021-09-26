@@ -1,26 +1,15 @@
 import time
 from pathlib import Path
+from typing import Optional
 
 import arcade
-from PIL import ImageEnhance
+from arcade.texture import load_texture
+from PIL import Image, ImageEnhance
 
+from misc.item import Item
 
-class BreakMask(arcade.Sprite):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.break_state = -1
-        self.textures = []
-        graphics = Path("../../assets/animations")
-        for asset in graphics.iterdir():
-            self.textures.append(arcade.Sprite(str(asset)))
-
-    def add_break_state(self):
-        self.break_state += 1
-        self.set_texture(self.textures[self.break_state])
-
-    def reset_break_state(self):
-        self.break_state = 0
-        self.set_texture(self.textures[self.break_state])
+BREAK_TEXTURES_PATH = Path("assets/animations")
+BREAK_TEXTURES = [Image.open(f) for f in BREAK_TEXTURES_PATH.iterdir()]
 
 
 class Block(arcade.Sprite):
@@ -41,6 +30,15 @@ class Block(arcade.Sprite):
         self.ORIGINAL_IMAGE = self.texture.image
         self.bright = bright
         self.breaking_time = breaking_time
+        self.break_time_left = breaking_time
+        self.break_textures = []
+        for i, break_texture in BREAK_TEXTURES:
+            orig_textur_copy = self._texture.image.copy()
+            orig_textur_copy.paste(break_texture, )
+            new_texture = arcade.Texture(f"{block_id}_{i}", orig_textur_copy)
+            self.break_textures.append(new_texture)
+        self.anim_pos = 0
+        self.orig_texture = self._texture
 
     def hp_set(self, val):
         if val <= 0:
@@ -60,3 +58,19 @@ class Block(arcade.Sprite):
         self.bright = bright
         enhancer = ImageEnhance.Brightness(self.ORIGINAL_IMAGE)
         self.texture.image = enhancer.enhance(bright)
+
+    def _break(self, delta_time) -> Optional[Item]:
+        self.break_time_left -= delta_time
+        if self.breaking_time < 0:
+            return Item(stackable=True, max_stack=64, inventory_slot=0, actual_amount=1, block_id=self.block_id)
+        self.anim_pos += 1
+        self.texture = self.break_textures[self.anim_pos]
+
+    def stop_breaking(self) -> None:
+        # Reset time and texture
+        self.break_time_left = self.breaking_time
+        self.texture = self.orig_texture
+
+    def break_(self, block_id) -> None:
+        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
+        self.texture = load_texture(path)

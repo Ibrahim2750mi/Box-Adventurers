@@ -1,4 +1,5 @@
 import gc
+import math
 from collections import deque
 from functools import cache
 from itertools import islice
@@ -8,14 +9,16 @@ from threading import Thread
 import arcade
 import arcade.gui
 import numpy as np
-from arcade import color
+from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
+from block.block import Block
 from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, PLAYER_SCALING,
                     SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH,
                     VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN,)
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
+from misc.item import Item
 from misc.terrain import gen_world
 
 
@@ -38,6 +41,9 @@ class Game(arcade.View):
         self.loaded_chunks: dict = None
         self.bg_music: arcade.Sound = None
         self.broke_blocks: dict = None
+
+        self.break_cooldown = False
+        self.place_cooldown = False
 
     @cache
     def __add_blocks(self, h_chunk: HorizontalChunk):
@@ -88,36 +94,37 @@ class Game(arcade.View):
 
     def optimise(self):
         if (self.player_sprite.chunk + 1 not in self.loaded_chunks.keys(),
-            self.player_sprite.last_faced_dir == "right") == (True, True) \
-                or (self.player_sprite.chunk - 1 not in self.loaded_chunks.keys(),
-                    self.player_sprite.last_faced_dir == "left") == (True, True):
+                self.player_sprite.last_faced_dir == "right",) != (True, True) and (
+                self.player_sprite.chunk - 1 not in self.loaded_chunks.keys(),
+                self.player_sprite.last_faced_dir == "left",) != (True, True,):
 
-            block_list_ = None
-            background_list_ = None
-            insert_i = None
-            chunk_index = None
+            return
+        block_list_ = None
+        background_list_ = None
+        insert_i = None
+        chunk_index = None
 
-            if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() and \
-                    self.player_sprite.last_faced_dir == "right":
-                key = min(self.loaded_chunks.keys())
-                blocks = self.loaded_chunks[key][0]
-                blocks_bg = self.loaded_chunks[key][1]
-                del (self.loaded_chunks[key])
-                insert_i = False
-                block_list_ = islice(self.block_list, blocks - 1, len(self.block_list) - 1)
-                background_list_ = islice(self.background_list, blocks_bg - 1, len(self.background_list) - 1)
-                chunk_index = self.player_sprite.chunk + 1
+        if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() and \
+                self.player_sprite.last_faced_dir == "right":
+            key = min(self.loaded_chunks.keys())
+            blocks = self.loaded_chunks[key][0]
+            blocks_bg = self.loaded_chunks[key][1]
+            del (self.loaded_chunks[key])
+            insert_i = False
+            block_list_ = islice(self.block_list, blocks - 1, len(self.block_list) - 1)
+            background_list_ = islice(self.background_list, blocks_bg - 1, len(self.background_list) - 1)
+            chunk_index = self.player_sprite.chunk + 1
 
-            elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys() and \
-                    self.player_sprite.last_faced_dir == "left":
-                key = max(self.loaded_chunks.keys())
-                blocks = self.loaded_chunks[key][0]
-                blocks_bg = self.loaded_chunks[key][1]
-                del (self.loaded_chunks[key])
-                insert_i = True
-                block_list_ = islice(self.block_list, len(self.block_list) - blocks - 1)
-                background_list_ = islice(self.background_list, len(self.background_list) - blocks_bg - 1)
-                chunk_index = self.player_sprite.chunk - 1
+        elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys() and \
+                self.player_sprite.last_faced_dir == "left":
+            key = max(self.loaded_chunks.keys())
+            blocks = self.loaded_chunks[key][0]
+            blocks_bg = self.loaded_chunks[key][1]
+            del (self.loaded_chunks[key])
+            insert_i = True
+            block_list_ = islice(self.block_list, len(self.block_list) - blocks - 1)
+            background_list_ = islice(self.background_list, len(self.background_list) - blocks_bg - 1)
+            chunk_index = self.player_sprite.chunk - 1
 
             try:
                 h_chunk = self.whole_world[chunk_index]
@@ -154,7 +161,7 @@ class Game(arcade.View):
 
         self.game_over: bool = False
 
-    def setup_world(self):
+    def setup_world(self) -> None:
         self.block_list = arcade.SpriteList()
         self.background_list = arcade.SpriteList()
 
@@ -181,7 +188,7 @@ class Game(arcade.View):
             self.loaded_chunks[visible_index] = [h_chunk.other_block_count, h_chunk.bg_block_count]
             self.__add_blocks(h_chunk)
 
-    def setup_player(self):
+    def setup_player(self) -> None:
         self.player_list = arcade.SpriteList()
 
         # Set up the player
@@ -212,17 +219,43 @@ class Game(arcade.View):
         """
         self.player_sprite.on_key_press(key, modifiers, self.physics_engine.can_jump())
 
-    def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
-        self.camera.center_camera_to_player(self.player_sprite)
-        tmp_x = x - 684 + self.player_sprite.center_x
-        tmp_y = y - 351 + self.player_sprite.center_y
-        path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
-        blocks = arcade.get_closest_sprite(arcade.Sprite(
-            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.block_list)
-
     def on_key_release(self, key: int, modifiers: int) -> None:
         """Called when the user presses a mouse button."""
         self.player_sprite.on_key_release(key, modifiers)
+
+    def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
+        self.camera.center_camera_to_player(self.player_sprite)
+        tmp_x = x - 600 + self.player_sprite.center_x
+        tmp_y = y - 347 + self.player_sprite.center_y
+        distance = math.sqrt((tmp_x - self.player_sprite.center_x) ** 2 + (tmp_y - self.player_sprite.center_y) ** 2)
+        path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
+        block = arcade.get_closest_sprite(arcade.Sprite(
+            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.block_list)
+
+        if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
+            # if block is within range and is not sky then break it
+            distance <= 100 and block[0].block_id > 129 and self.break_block(block[0])
+
+        # elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
+        #     distance <= 100 and block[0].block_id <= 129 and self.place_block)
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
+        """ Called when the user presses a mouse button. """
+        if button == MOUSE_BUTTON_LEFT:
+            self.break_cooldown = False
+        if button == MOUSE_BUTTON_RIGHT:
+            self.place_cooldown = False
+
+    def break_block(self, block: Block):
+        self.player_sprite.inventory.add(Item(True, block.block_id))
+        block.break_(128)
+        self.block_list.remove(block)
+        self.background_list.append(block)
+        self.break_cooldown = True
+
+    # def place_block(self, block: Block):
+    #     self.player_sprite.inventory.remove(Item(True, block))
+    #     block.place(block.id)
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""

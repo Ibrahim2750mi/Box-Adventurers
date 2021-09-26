@@ -1,16 +1,16 @@
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-from arcade import key
+from arcade import key, load_texture
 
 from entities.entity import Entity
 from misc.inventory import Inventory
 
 
 class Direction(Enum):
-    LEFT = auto()
-    RIGHT = auto()
+    LEFT = 0
+    RIGHT = 1
 
 
 class Player(Entity):
@@ -48,22 +48,10 @@ class Player(Entity):
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
         self.inventory = Inventory()
-        self.last_faced_dir = None
-
-    def update(self) -> None:
-        self.check_bounds()
-
-    def check_bounds(self) -> None:
-        """Check if player is out of bounds."""
-        if self.left < 0:
-            self.left: int = 0
-        elif self.right > self.screen_width - 1:
-            self.right: int = self.screen_width - 1
-
-        if self.bottom < 0:
-            self.bottom: int = 0
-        elif self.top > self.screen_height - 1:
-            self.top: int = self.screen_height - 1
+        self.last_faced_dir = "left"
+        self.textures = []
+        self.textures.append(load_texture(str(path)))
+        self.textures.append(load_texture(str(path), flipped_horizontally=True))
 
     def on_key_press(
             self, key_pressed: int, modifier: int,
@@ -84,10 +72,12 @@ class Player(Entity):
             self.change_x = -self.movement_speed
             self.direction = Direction.LEFT
             self.last_faced_dir = "left"
+            self.texture = self.textures[Direction.LEFT.value]
         elif key_pressed == key.RIGHT:
             self.change_x = self.movement_speed
             self.direction = Direction.RIGHT
             self.last_faced_dir = "right"
+            self.texture = self.textures[Direction.RIGHT.value]
 
     def on_key_release(self, key_released: int, modifiers: int) -> None:
         """Called when the user releases a key.

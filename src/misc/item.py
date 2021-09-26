@@ -22,3 +22,4 @@ class Item(Sprite):
         self.center_y = cen_y - (inv_height / 2) + 2 + 29
 
         draw_text(str(slot), self.center_x - 20, self.center_y - 20, WHITE, 18)
+        draw_text(str(self.amount), self.center_x + 10, self.center_y - 20, WHITE, 10)
