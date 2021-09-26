@@ -1,9 +1,9 @@
-import gc
 from collections import deque
 from functools import cache
 from itertools import islice
 from pathlib import Path
 from threading import Thread
+import time
 
 import arcade
 import arcade.gui
@@ -12,7 +12,7 @@ from arcade import color
 
 from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, PLAYER_SCALING,
                     SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH,
-                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN,)
+                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN, )
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
@@ -130,7 +130,6 @@ class Game(arcade.View):
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
-
         self.setup_world()
 
         self.camera = CustomCamera(SCREEN_WIDTH, SCREEN_HEIGHT, self.window)
@@ -153,6 +152,7 @@ class Game(arcade.View):
         self.view_bottom: int = 0
 
         self.game_over: bool = False
+        self.window.show_view(self)
 
     def setup_world(self):
         self.block_list = arcade.SpriteList()
@@ -226,6 +226,7 @@ class Game(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
+
         def local_caller():
             self.physics_engine.update()
             self.player_sprite.inventory.update()
@@ -251,6 +252,19 @@ class QuitButton(arcade.gui.UIFlatButton):
         arcade.exit()
 
 
+class LoadingScreen(arcade.View):
+    def __init__(self):
+        super().__init__()
+
+    def on_show(self):
+        arcade.set_background_color(color.OUTER_SPACE)
+
+    def on_draw(self):
+        arcade.start_render()
+
+        arcade.draw_text("Loading World...", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, color=color.WHITE)
+
+
 class StartView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -266,23 +280,21 @@ class StartView(arcade.View):
         self.frameNum = 22
         self.maxFrames = 285  # 390
 
-        print(gc.isenabled())
-
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
 
         # Create the buttons
         start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style={
-                                               "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(start_button.with_space_around(bottom=20))
 
         settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style={
-                                                  "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(settings_button.with_space_around(bottom=20))
 
         # Again, method 1. Use a child class to handle events.
         quit_button = QuitButton(text="Quit", width=200, style={
-                                 "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(quit_button)
 
         # --- Method 2 for handling click events,
@@ -304,16 +316,18 @@ class StartView(arcade.View):
         )
 
     def on_click_start(self, event):
+        loading_screen = LoadingScreen()
+        self.window.show_view(loading_screen)
         game_view = Game()
         game_view.setup()
-        self.window.show_view(game_view)
 
     def on_draw(self):
         arcade.start_render()
 
         # background gif
         # showing the background image
-        self.background = arcade.load_texture(f"./assets/images/out{self.frameNum}.png")
+        path = Path(__file__).parent.joinpath(f"../assets/images/out{self.frameNum}.png")
+        self.background = arcade.load_texture(path)
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
                                       self.background)
         self.background = None
