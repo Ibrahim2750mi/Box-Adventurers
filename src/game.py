@@ -2,6 +2,7 @@ from collections import deque
 from functools import cache
 from itertools import islice
 from pathlib import Path
+from threading import Thread
 
 import arcade
 import numpy as np
@@ -34,6 +35,7 @@ class Game(arcade.Window):
         self.hud_camera: arcade.Camera = None
         self.loaded_chunks: dict = None
         self.bg_music: arcade.Sound = None
+        self.broke_blocks: dict = None
 
     @cache
     def __add_blocks(self, h_chunk: HorizontalChunk):
@@ -121,7 +123,7 @@ class Game(arcade.Window):
                 pass
             else:
                 h_chunk: HorizontalChunk
-                self.loaded_chunks[chunk_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
+                self.loaded_chunks[chunk_index] = [h_chunk.other_block_count, h_chunk.bg_block_count]
                 self.__add_chunk(h_chunk, insert_i, block_list_, background_list_)
 
     def setup(self) -> None:
@@ -174,7 +176,7 @@ class Game(arcade.Window):
         for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 31, int(VISIBLE_RANGE_MAX / 16) + 31):
             h_chunk = self.whole_world[visible_index]
             h_chunk: HorizontalChunk
-            self.loaded_chunks[visible_index] = (h_chunk.other_block_count, h_chunk.bg_block_count)
+            self.loaded_chunks[visible_index] = [h_chunk.other_block_count, h_chunk.bg_block_count]
             self.__add_blocks(h_chunk)
 
     def setup_player(self):
@@ -208,18 +210,36 @@ class Game(arcade.Window):
         """
         self.player_sprite.on_key_press(key, modifiers, self.physics_engine.can_jump())
 
+    def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
+        self.camera.center_camera_to_player(self.player_sprite)
+        tmp_x = x - 684 + self.player_sprite.center_x
+        tmp_y = y - 351 + self.player_sprite.center_y
+        path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
+        blocks = arcade.get_closest_sprite(arcade.Sprite(
+            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.block_list)
+
     def on_key_release(self, key: int, modifiers: int) -> None:
         """Called when the user presses a mouse button."""
         self.player_sprite.on_key_release(key, modifiers)
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
+        def local_caller():
+            self.physics_engine.update()
+            self.player_sprite.inventory.update()
+            self.camera.center_camera_to_player(self.player_sprite)
 
-        self.physics_engine.update()
-        self.player_sprite.inventory.update()
-        self.camera.center_camera_to_player(self.player_sprite)
-        # print(self.player_sprite.center_y, self.player_sprite.center_x)
-        self.optimise()
+        t1 = Thread(target=local_caller)
+        t2 = Thread(target=self.optimise)
+        # self.physics_engine.update()
+        # self.player_sprite.inventory.update()
+        # self.camera.center_camera_to_player(self.player_sprite)
+        # # print(self.player_sprite.center_y, self.player_sprite.center_x)
+        # self.optimise()
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
 
 
 def main() -> None:
