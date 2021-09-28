@@ -206,9 +206,9 @@ class Game(arcade.View):
         arcade.start_render()
 
         self.camera.use()
-        self.background_list.draw()
-        self.block_list.draw()
-        self.player_list.draw()
+        self.background_list.draw(pixelated=True)
+        self.block_list.draw(pixelated=True)
+        self.player_list.draw(pixelated=True)
 
         self.hud_camera.use()
         self.player_sprite.inventory.draw()
@@ -259,22 +259,10 @@ class Game(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
-        def local_caller():
-            self.physics_engine.update()
-            self.player_sprite.inventory.update()
-            self.camera.center_camera_to_player(self.player_sprite)
-
-        t1 = Thread(target=local_caller)
-        t2 = Thread(target=self.optimise)
-        # self.physics_engine.update()
-        # self.player_sprite.inventory.update()
-        # self.camera.center_camera_to_player(self.player_sprite)
-        # # print(self.player_sprite.center_y, self.player_sprite.center_x)
-        # self.optimise()
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
+        self.physics_engine.update()
+        self.player_sprite.inventory.update()
+        self.camera.center_camera_to_player(self.player_sprite)
+        self.optimise()
 
 
 # --- Method 1 for handling click events,

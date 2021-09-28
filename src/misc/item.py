@@ -17,7 +17,7 @@ class Item(Sprite):
         self.block_id = block_id
 
     def draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
-        super().draw()
+        super().draw(pixelated=True)
         self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
         self.center_y = cen_y - (inv_height / 2) + 2 + 29
 
