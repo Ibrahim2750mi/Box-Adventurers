@@ -296,10 +296,9 @@ class StartView(arcade.View):
         # Set background color
         # arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
         self.background = None
-        self.frameNum = 22
-        self.maxFrames = 285  # 390
+        self.frameNum = 1
+        self.maxFrames = 155  # 390
 
-        print(gc.isenabled())
 
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
@@ -346,7 +345,14 @@ class StartView(arcade.View):
 
         # background gif
         # showing the background image
-        self.background = arcade.load_texture(f"./assets/images/out{self.frameNum}.png")
+        if len(str(self.frameNum)) == 1:
+            partial_frame = "00" + str(self.frameNum)
+        elif len(str(self.frameNum)) == 2:
+            partial_frame = "0" + str(self.frameNum)
+        else:
+            partial_frame = str(self.frameNum)
+
+        self.background = arcade.load_texture(f"./assets/images/ezgif-frame-{partial_frame}.png")
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
                                       self.background)
         self.background = None
@@ -354,7 +360,7 @@ class StartView(arcade.View):
         # changing it to the next frame
         self.frameNum += 1
         if self.frameNum > self.maxFrames:
-            self.frameNum = 22
+            self.frameNum = 1
 
         self.manager.draw()
 
