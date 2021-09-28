@@ -9,8 +9,7 @@ from PIL import Image, ImageEnhance
 from misc.item import Item
 
 BREAK_TEXTURES_PATH = Path("assets/animations")
-BREAK_TEXTURES = [Image.open(f) for f in BREAK_TEXTURES_PATH.iterdir()]
-
+BREAK_TEXTURES = [arcade.Texture(path, Image.open(path)) for path in BREAK_TEXTURES_PATH.iterdir()]
 
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,
@@ -31,12 +30,7 @@ class Block(arcade.Sprite):
         self.bright = bright
         self.breaking_time = breaking_time
         self.break_time_left = breaking_time
-        self.break_textures = []
-        for i, break_texture in BREAK_TEXTURES:
-            orig_textur_copy = self._texture.image.copy()
-            orig_textur_copy.paste(break_texture, )
-            new_texture = arcade.Texture(f"{block_id}_{i}", orig_textur_copy)
-            self.break_textures.append(new_texture)
+        self.break_textures = BREAK_TEXTURES
         self.anim_pos = 0
         self.orig_texture = self._texture
 

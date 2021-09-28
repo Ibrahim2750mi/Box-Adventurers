@@ -51,7 +51,7 @@ class Inventory(Sprite):
         raise InventoryFullError
 
     def draw(self) -> None:
-        super().draw()
+        super().draw(pixelated=True)
         for slot, item in self.slots.items():
             if item is not None:
                 item.draw(slot, self.center_x, self.center_y, self.width, self.height)
