@@ -1,5 +1,7 @@
 from collections import deque
+from typing import Any
 
+from arcade import SpriteList
 import numpy as np
 import numpy.typing as npt
 
@@ -9,7 +11,7 @@ from config import (SPRITE_PIXEL_SIZE)
 
 class HorizontalChunk:
     def __init__(self, x: int):
-        self.__iterable = deque()
+        self.__iterable = SpriteList(use_spatial_hash=True)
         self.__y = 0
         self.__x = x
         self.__chunks = 0
@@ -19,7 +21,7 @@ class HorizontalChunk:
     def __getitem__(self, key: int):
         return self.__iterable[key]
 
-    def __setitem__(self, un_used: int, value: npt.NDArray[np.int_]):
+    def __setitem__(self, _: Any, value: npt.NDArray[np.int_]):
         self.__chunks += 1
         for y_row in np.flip(value):
             for x_inc, block_ in enumerate(y_row):
