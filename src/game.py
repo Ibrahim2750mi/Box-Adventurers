@@ -364,6 +364,9 @@ class StartView(arcade.View):
 
         self.manager.draw()
 
+    def on_view_hide(self):
+        self.manager.disable()
+
 
 def main():
     """ Main method """
