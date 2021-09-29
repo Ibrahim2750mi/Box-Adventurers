@@ -20,4 +20,4 @@ Pipfile.lock
 dmypy.json
 
 # world data
-*.npy
+data/

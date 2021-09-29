@@ -8,8 +8,9 @@ from PIL import Image, ImageEnhance
 
 from misc.item import Item
 
-BREAK_TEXTURES_PATH = Path("assets/animations")
+BREAK_TEXTURES_PATH = Path(__file__).parent.joinpath(f"../../assets/animations/")
 BREAK_TEXTURES = [arcade.Texture(path, Image.open(path)) for path in BREAK_TEXTURES_PATH.iterdir()]
+
 
 class Block(arcade.Sprite):
     def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,

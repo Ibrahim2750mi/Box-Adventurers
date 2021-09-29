@@ -1,20 +1,17 @@
-import gc
 import math
 from collections import deque
-from functools import cache
-from itertools import islice
+import pickle
 from pathlib import Path
-from threading import Thread
+from typing import Tuple
 
 import arcade
 import arcade.gui
-import numpy as np
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
 from block.block import Block
 from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, PLAYER_SCALING,
                     SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH,
-                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN,)
+                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN, )
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
@@ -30,12 +27,9 @@ class Game(arcade.View):
         super().__init__()
 
         # Initialising arguments
-        self.whole_world: arcade.Scene = None
+        self.whole_world: deque = None
 
         self.physics_engine: arcade.PhysicsEnginePlatformer = None
-
-        self.block_list: arcade.SpriteList = None
-        self.background_list: arcade.SpriteList = None
 
         self.player_list: arcade.SpriteList = None
         self.player_sprite: Player = None
@@ -43,8 +37,8 @@ class Game(arcade.View):
         self.camera: CustomCamera = None
         self.hud_camera: arcade.Camera = None
 
-        self.loaded_chunks: deque = None
-        self.loaded_chunks_scene: arcade.Scene = None
+        self.loaded_chunks: list = None
+        self.loaded_chunks_sprites: deque = None
 
         self.bg_music: arcade.Sound = None
         self.broke_blocks: dict = None
@@ -52,50 +46,52 @@ class Game(arcade.View):
         self.break_cooldown = False
         self.place_cooldown = False
 
+    def get_colloidal_blocks(self):
+        colloidable_blocks = arcade.SpriteList()
+
+        for sprite_list_ in self.loaded_chunks_sprites:
+            for block in sprite_list_:
+                if block.block_id > 129:
+                    colloidable_blocks.append(block)
+        return colloidable_blocks
+
     def optimise(self):
-        if (self.player_sprite.chunk + 1 not in self.loaded_chunks.keys(),
-                self.player_sprite.last_faced_dir == "right",) != (True, True) and (
-                self.player_sprite.chunk - 1 not in self.loaded_chunks.keys(),
-                self.player_sprite.last_faced_dir == "left",) != (True, True,):
-                return
+        if (self.player_sprite.chunk + 1 not in self.loaded_chunks,
+            self.player_sprite.last_faced_dir == "right",) == (True, True) and (
+                self.player_sprite.chunk - 1 not in self.loaded_chunks,
+                self.player_sprite.last_faced_dir == "left",) == (True, True,):
+            insert_i = None
+            chunk_index = None
+            key = None
 
-        block_list_ = None
-        background_list_ = None
-        insert_i = None
-        chunk_index = None
+            if self.player_sprite.chunk + 1 not in self.loaded_chunks and \
+                    self.player_sprite.last_faced_dir == "right":
+                key = min(self.loaded_chunks)
+                insert_i = False
+                chunk_index = self.player_sprite.chunk + 1
 
-        if self.player_sprite.chunk + 1 not in self.loaded_chunks.keys() and \
-                self.player_sprite.last_faced_dir == "right":
-            key = min(self.loaded_chunks.keys())
-            blocks = self.loaded_chunks[key][0]
-            blocks_bg = self.loaded_chunks[key][1]
-            insert_i = False
-            block_list_ = islice(self.block_list, blocks - 1, len(self.block_list) - 1)
-            background_list_ = islice(self.background_list, blocks_bg - 1, len(self.background_list) - 1)
-            chunk_index = self.player_sprite.chunk + 1
+            elif self.player_sprite.chunk - 1 not in self.loaded_chunks and \
+                    self.player_sprite.last_faced_dir == "left":
+                key = max(self.loaded_chunks)
+                insert_i = True
+                chunk_index = self.player_sprite.chunk - 1
 
-        elif self.player_sprite.chunk - 1 not in self.loaded_chunks.keys() and \
-                self.player_sprite.last_faced_dir == "left":
-            key = max(self.loaded_chunks.keys())
-            self.loaded_chunks_scene.remove_sprite_list_by_name(str(key))
-            insert_i = True
-            chunk_index = self.player_sprite.chunk - 1
-
-        try:
-            h_chunk_sprite_list = self.whole_world[str(chunk_index)]
-        except KeyError:
-            pass
-        else:
-            h_chunk_sprite_list: arcade.SpriteList
-            self.loaded_chunks.append(chunk_index)
-            if insert_i:
-                self.loaded_chunks_scene.add_sprite_list_before(str(chunk_index), str(self.player_sprite.chunk), h_chunk_sprite_list)
+            try:
+                h_chunk_ = self.whole_world[chunk_index]
+                h_chunk_: arcade.SpriteList
+            except KeyError:
+                pass
             else:
-                self.loaded_chunks_scene.add_sprite_list(str(chunk_index), h_chunk_sprite_list)
+                h_chunk_: HorizontalChunk
+                self.loaded_chunks.append(chunk_index)
+                if insert_i:
+                    self.loaded_chunks_sprites.appendleft(h_chunk_)
+                else:
+                    self.loaded_chunks_sprites.append(h_chunk_)
 
-            self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite, [self.loaded_chunks_scene], GRAVITY)
-
-            self.loaded_chunks.pop(key)
+                self.loaded_chunks.pop(self.loaded_chunks.index(key))
+                self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite,
+                                                                     self.get_colloidal_blocks(), GRAVITY)
 
     def setup(self) -> None:
         """Set up the game and initialize the variables."""
@@ -109,7 +105,7 @@ class Game(arcade.View):
 
         self.physics_engine = arcade.PhysicsEnginePlatformer(
             self.player_sprite,
-            [self.loaded_chunks_scene],
+            self.get_colloidal_blocks(),
             gravity_constant=GRAVITY)
 
         arcade.set_background_color(color.AMAZON)
@@ -118,43 +114,41 @@ class Game(arcade.View):
         self.bg_music = arcade.Sound(path)
         self.bg_music.play(loop=True)
 
-        self.view_left: int = 0
-        self.view_bottom: int = 0
-
-        self.game_over: bool = False
-
     def setup_world(self) -> None:
-        self.block_list = arcade.SpriteList()
-        self.background_list = arcade.SpriteList()
 
-        self.whole_world = arcade.Scene()
-        self.loaded_chunks = deque()
-        self.loaded_chunks_scene = arcade.Scene()
+        self.loaded_chunks = []
+        self.loaded_chunks_sprites = deque()
 
-        path = Path(__file__).parent.joinpath("misc/world.npy")
+        path = Path(__file__).parent.joinpath("../data")
         try:
-            with open(str(path), "rb") as f:
-                self.whole_world = np.load(f, allow_pickle=True)
-        except FileNotFoundError:
+            for n in range(-31, 31):
+                with open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "rb") as f:
+                    chunk = pickle.load(f)
+                    h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
+                    h_chunk.make_sprite_list(h_chunk.iterable)
+                    self.whole_world.append(h_chunk.sprites)
 
+        except FileNotFoundError:
+            self.whole_world = deque()
             for n in range(-31, 31):
                 self.whole_world.append(HorizontalChunk(n * 16))
 
             world = gen_world(-496, 496, 0, 320)
             for k, chunk in world.items():
                 n = int(k[1] / 16) + 31
-                h_chunk = HorizontalChunk(n * 16)
-                h_chunk['setter'] = chunk
+                self.whole_world[n]['setter'] = chunk
 
-                self.whole_world.add_sprite_list(str(n), h_chunk.get_iterable())
+            for n, chunk in enumerate(self.whole_world):
+                with open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+                    pickle.dump(chunk.iterable, f)
+                chunk.make_sprite_list(chunk.iterable)
+                self.whole_world[n] = chunk.sprites
 
-                if int(VISIBLE_RANGE_MAX / 16) + 31 >= n >= int(VISIBLE_RANGE_MIN / 16) + 31:
-                    self.loaded_chunks.append(n)
-                    self.loaded_chunks_scene.add_sprite_list(str(n), h_chunk.get_iterable())
-
-
-            with open(str(path), "wb") as f:
-                np.save(f, self.whole_world, allow_pickle=True)
+        for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 31, int(VISIBLE_RANGE_MAX / 16) + 31):
+            h_chunk = self.whole_world[visible_index]
+            h_chunk: arcade.SpriteList
+            self.loaded_chunks.append(visible_index)
+            self.loaded_chunks_sprites.append(h_chunk)
 
     def setup_player(self) -> None:
         self.player_list = arcade.SpriteList()
@@ -174,9 +168,10 @@ class Game(arcade.View):
         arcade.start_render()
 
         self.camera.use()
-        self.background_list.draw(pixelated=True)
-        self.loaded_chunks_scene.draw(pixelated=True)
         self.player_list.draw(pixelated=True)
+
+        for sprite_list in self.loaded_chunks_sprites:
+            sprite_list.draw(pixelated=True)
 
         self.hud_camera.use()
         self.player_sprite.inventory.draw()
@@ -198,10 +193,11 @@ class Game(arcade.View):
         distance = math.sqrt((tmp_x - self.player_sprite.center_x) ** 2 + (tmp_y - self.player_sprite.center_y) ** 2)
         path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
         block = arcade.get_closest_sprite(arcade.Sprite(
-            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.block_list)
+            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.get_colloidal_blocks())
 
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
+            block: Tuple[Block, float]
             distance <= 100 and block[0].block_id > 129 and self.break_block(block[0])
 
         # elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
@@ -217,8 +213,9 @@ class Game(arcade.View):
     def break_block(self, block: Block):
         self.player_sprite.inventory.add(Item(True, block.block_id))
         block.break_(128)
-        self.block_list.remove(block)
-        self.background_list.append(block)
+        for sprite_list_ in self.loaded_chunks_sprites:
+            if block in sprite_list_:
+                sprite_list_.remove(block)
         self.break_cooldown = True
 
     # def place_block(self, block: Block):
@@ -240,6 +237,25 @@ class QuitButton(arcade.gui.UIFlatButton):
         arcade.exit()
 
 
+class LoadingScreen(arcade.View):
+    def __init__(self, game_view):
+        super().__init__()
+        self.first_time = True
+        self.game_view = game_view
+
+    def on_show(self):
+        arcade.set_background_color(color.BLACK)
+
+    def on_draw(self):
+        arcade.start_render()
+        if not self.first_time:
+            self.game_view.setup()
+            self.window.show_view(self.game_view)
+        else:
+            self.first_time = False
+        arcade.draw_text("Loading World...", SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, color=color.WHITE)
+
+
 class StartView(arcade.View):
     def __init__(self):
         super().__init__()
@@ -255,22 +271,21 @@ class StartView(arcade.View):
         self.frameNum = 1
         self.maxFrames = 155  # 390
 
-
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
 
         # Create the buttons
         start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style={
-                                               "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(start_button.with_space_around(bottom=20))
 
         settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style={
-                                                  "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(settings_button.with_space_around(bottom=20))
 
         # Again, method 1. Use a child class to handle events.
         quit_button = QuitButton(text="Quit", width=200, style={
-                                 "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
         self.v_box.add(quit_button)
 
         # --- Method 2 for handling click events,
@@ -293,8 +308,8 @@ class StartView(arcade.View):
 
     def on_click_start(self, event):
         game_view = Game()
-        game_view.setup()
-        self.window.show_view(game_view)
+        loading_screen = LoadingScreen(game_view)
+        self.window.show_view(loading_screen)
 
     def on_draw(self):
         arcade.start_render()
@@ -308,7 +323,7 @@ class StartView(arcade.View):
         else:
             partial_frame = str(self.frameNum)
 
-        self.background = arcade.load_texture(f"./assets/images/ezgif-frame-{partial_frame}.png")
+        self.background = arcade.load_texture(f"../assets/images/ezgif-frame-{partial_frame}.png")
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
                                       self.background)
         self.background = None
