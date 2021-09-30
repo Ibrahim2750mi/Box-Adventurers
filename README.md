@@ -33,7 +33,7 @@ Its a game which does infinite terrain generation, the player has no specific ob
 
 # BUGS
 
-+ While in unloading chunks it gives error leading the game to crashing, reason when we break a block it doesn't removes the block from the loaded chunk in the list, didn't had time to solve this. Also a physical fix is that increasing the `VISIBLE_RANGE_MAX` and `VISIBLE_RANGE_MIN` in config.py
++ While in unloading chunks it gives error leading the game to crashing, reason when we break a block it doesn't removes the block from the loaded chunk in the list, didn't had time to solve this. Also a physical fix is that increasing the `VISIBLE_RANGE_MAX` and `VISIBLE_RANGE_MIN` in config.py| (SOLVED)
 
 
 
