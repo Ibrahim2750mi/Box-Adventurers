@@ -1,5 +1,6 @@
 import math
 from collections import deque
+import gzip
 import pickle
 from pathlib import Path
 from typing import Tuple
@@ -129,7 +130,7 @@ class Game(arcade.View):
         try:
             for n in range(-31, 31):
                 name = n + 31
-                with open(f"{str(path)}/pickle{pickle.format_version}_{name}.pickle", "rb") as f:
+                with gzip.open(f"{str(path)}/pickle{pickle.format_version}_{name}.pickle") as f:
                     chunk = pickle.load(f)
                     h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
                     h_chunk.make_sprite_list(h_chunk.iterable)
@@ -145,7 +146,7 @@ class Game(arcade.View):
                 self.whole_world[n]['setter'] = chunk
 
             for n, chunk in enumerate(self.whole_world):
-                with open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+                with gzip.open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "wb") as f:
                     pickle.dump(chunk.iterable, f)
                 chunk.make_sprite_list(chunk.iterable)
                 self.whole_world[n] = chunk.sprites
