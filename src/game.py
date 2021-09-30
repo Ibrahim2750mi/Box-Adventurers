@@ -1,7 +1,4 @@
 import math
-from collections import deque
-import gzip
-import pickle
 from pathlib import Path
 from typing import Tuple
 
@@ -10,18 +7,10 @@ import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
 from block.block import Block
-from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, PLAYER_SCALING,
-                    SCREEN_HEIGHT, SCREEN_TITLE, SCREEN_WIDTH,
-                    VISIBLE_RANGE_MAX, VISIBLE_RANGE_MIN, )
-from entities.player import Player
-from misc.camera import CustomCamera
-from misc.chunk import HorizontalChunk
 from misc.item import Item
-from misc.terrain import gen_world
-from utils import Timer
-
-DATA_DIR = Path(__file__).parent.parent / "data"
-
+from world import World
+from misc.inventory import Inventory
+import config
 
 class Game(arcade.View):
     """Base game class"""
@@ -30,190 +19,50 @@ class Game(arcade.View):
         """Initializer"""
         super().__init__()
 
-        # Initialising arguments
-        self.whole_world: deque = None
-
-        self.physics_engine: arcade.PhysicsEnginePlatformer = None
-
-        self.player_list: arcade.SpriteList = None
-        self.player_sprite: Player = None
-
-        self.camera: CustomCamera = None
-        self.hud_camera: arcade.Camera = None
-
-        self.loaded_chunks: list = None
-        self.loaded_chunks_sprites: deque = None
-
         self.bg_music: arcade.Sound = None
-        self.broke_blocks: dict = None
-
         self.break_cooldown = False
         self.place_cooldown = False
+        self.hud_camera = arcade.Camera(*self.window.get_size())
+        self.world = World(screen_size=self.window.get_size(), name="default")
+        self.inventory = Inventory()
+        self.inventory.setup_coords(self.window.get_size())
 
-    def get_colloidal_blocks(self):
-        colloidable_blocks = arcade.SpriteList()
+        # path = Path(__file__).parent.joinpath("../assets/music/main_game_tune.wav")
+        # self.bg_music = arcade.Sound(path)
+        # self.bg_music.play(loop=True)
 
-        for sprite_list_ in self.loaded_chunks_sprites:
-            for block in sprite_list_:
-                if block.block_id > 129:
-                    try:
-                        colloidable_blocks.append(block)
-                    except ValueError:
-                        pass
-        return colloidable_blocks
-
-    def optimise(self):
-        if (self.player_sprite.chunk + 1 not in self.loaded_chunks,
-            self.player_sprite.last_faced_dir == "right") == (True, True) or (
-                self.player_sprite.chunk - 1 not in self.loaded_chunks,
-                self.player_sprite.last_faced_dir == "left") == (True, True):
-            insert_i = None
-            chunk_index = None
-            key = None
-
-            if self.player_sprite.chunk + 1 not in self.loaded_chunks and \
-                    self.player_sprite.last_faced_dir == "right":
-                key = min(self.loaded_chunks)
-                insert_i = False
-                chunk_index = self.player_sprite.chunk + 1
-
-            elif self.player_sprite.chunk - 1 not in self.loaded_chunks and \
-                    self.player_sprite.last_faced_dir == "left":
-                key = max(self.loaded_chunks)
-                insert_i = True
-                chunk_index = self.player_sprite.chunk - 1
-
-            try:
-                h_chunk_ = self.whole_world[chunk_index]
-                h_chunk_: arcade.SpriteList
-            except KeyError:
-                pass
-            else:
-                print(self.loaded_chunks, h_chunk_)
-                h_chunk_: HorizontalChunk
-                self.loaded_chunks.append(chunk_index)
-                if insert_i:
-                    self.loaded_chunks_sprites.appendleft(h_chunk_)
-                else:
-                    self.loaded_chunks_sprites.append(h_chunk_)
-
-                self.loaded_chunks.pop(self.loaded_chunks.index(key))
-                self.physics_engine = arcade.PhysicsEnginePlatformer(self.player_sprite,
-                                                                     self.get_colloidal_blocks(), GRAVITY)
-
-    def setup(self) -> None:
-        """Set up the game and initialize the variables."""
-
-        self.setup_world()
-
-        self.camera = CustomCamera(SCREEN_WIDTH, SCREEN_HEIGHT, self.window)
-        self.hud_camera = arcade.Camera(SCREEN_WIDTH, SCREEN_HEIGHT)
-
-        self.setup_player()
-
-        self.physics_engine = arcade.PhysicsEnginePlatformer(
-            self.player_sprite,
-            self.get_colloidal_blocks(),
-            gravity_constant=GRAVITY)
-
-        arcade.set_background_color(color.AMAZON)
-
-        path = Path(__file__).parent.joinpath("../assets/music/main_game_tune.wav")
-        self.bg_music = arcade.Sound(path)
-        self.bg_music.play(loop=True)
-
-    def setup_world(self) -> None:
-
-        self.whole_world = deque()
-        self.loaded_chunks = []
-        self.loaded_chunks_sprites = deque()
-
-        DATA_DIR.mkdir(exist_ok=True)
-
-        try:
-            print("Attempting to load existing chunks")
-            timer = Timer("load_world")
-
-            for n in range(-31, 31):
-                name = n + 31
-                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{name}.pickle") as f:
-                    chunk = pickle.load(f)
-                    h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
-                    h_chunk.make_sprite_list(h_chunk.iterable)
-                    self.whole_world.append(h_chunk.sprites)
-            print(f"Loaded chunks in {timer.stop()} seconds")
-        except FileNotFoundError:
-            print("Failed to load chunks. Generating world...")
-            timer = Timer("world_gen")
-            for n in range(-31, 31):
-                self.whole_world.append(HorizontalChunk(n * 16))
-
-            world = gen_world(-496, 496, 0, 320)
-            for k, chunk in world.items():
-                n = int(k[1] / 16) + 31
-                self.whole_world[n]['setter'] = chunk
-
-            print(f"Generated world in {timer.stop()} seconds")
-            print("Saving world")
-            timer = Timer("world_save")
-            for n, chunk in enumerate(self.whole_world):
-                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
-                    pickle.dump(chunk.iterable, f)
-                chunk.make_sprite_list(chunk.iterable)
-                self.whole_world[n] = chunk.sprites
-
-            print(f"Saved wold in {timer.stop()} seconds")
-
-        for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 31, int(VISIBLE_RANGE_MAX / 16) + 31):
-            h_chunk = self.whole_world[visible_index]
-            h_chunk: arcade.SpriteList
-            self.loaded_chunks.append(visible_index)
-            self.loaded_chunks_sprites.append(h_chunk)
-
-    def setup_player(self) -> None:
-        self.player_list = arcade.SpriteList()
-
-        # Set up the player
-        self.player_sprite = Player("player",
-                                    PLAYER_SCALING, 0, 3112, SCREEN_WIDTH,
-                                    SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
-        self.player_list.append(self.player_sprite)
-        self.player_sprite.inventory.setup_coords(self.camera.position)
+    def setup(self):
+        self.world.create()
 
     def on_draw(self) -> None:
-        """
-        Render the screen.
-        """
-        # This command has to happen before we start drawing
-        arcade.start_render()
-
-        self.camera.use()
-
-        for sprite_list in self.loaded_chunks_sprites:
-            sprite_list.draw(pixelated=True)
-
-        self.player_list.draw(pixelated=True)
+        self.window.clear()
+        self.world.draw()
         self.hud_camera.use()
-        self.player_sprite.inventory.draw()
+        self.inventory.draw()
+
+    def on_update(self, delta_time: float) -> None:
+        """Movement and game logic."""
+        self.world.update()
+        self.inventory.update()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """
         Called whenever the mouse moves.
         """
-        self.player_sprite.on_key_press(key, modifiers, self.physics_engine.can_jump())
+        self.world._player_sprite.on_key_press(key, modifiers, self.world._physics_engine.can_jump())
 
     def on_key_release(self, key: int, modifiers: int) -> None:
         """Called when the user presses a mouse button."""
-        self.player_sprite.on_key_release(key, modifiers)
+        self.world._player_sprite.on_key_release(key, modifiers)
 
     def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
-        self.camera.center_camera_to_player(self.player_sprite)
-        tmp_x = x - 600 + self.player_sprite.center_x
-        tmp_y = y - 347 + self.player_sprite.center_y
-        distance = math.sqrt((tmp_x - self.player_sprite.center_x) ** 2 + (tmp_y - self.player_sprite.center_y) ** 2)
+        # self.camera.center_camera_to_player(self.player_sprite)
+        tmp_x = x - 600 + self.world._player_sprite.center_x
+        tmp_y = y - 347 + self.world._player_sprite.center_y
+        distance = math.sqrt((tmp_x - self.world._player_sprite.center_x) ** 2 + (tmp_y - self.world._player_sprite.center_y) ** 2)
         path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
         block = arcade.get_closest_sprite(arcade.Sprite(
-            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.get_colloidal_blocks())
+            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.world.get_colloidal_blocks())
 
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
@@ -231,23 +80,14 @@ class Game(arcade.View):
             self.place_cooldown = False
 
     def break_block(self, block: Block):
-        self.player_sprite.inventory.add(Item(True, block.block_id))
+        self.inventory.add(Item(True, block.block_id))
         block.break_(128)
-        for sprite_list_ in self.loaded_chunks_sprites:
-            if block in sprite_list_:
-                sprite_list_.remove(block)
+
+        # Remove block from world
+        for sprite_list in self.world._loaded_chunks_sprites:
+            if block in sprite_list:
+                sprite_list.remove(block)
         self.break_cooldown = True
-
-    # def place_block(self, block: Block):
-    #     self.player_sprite.inventory.remove(Item(True, block))
-    #     block.place(block.id)
-
-    def on_update(self, delta_time: float) -> None:
-        """Movement and game logic."""
-        self.physics_engine.update()
-        self.player_sprite.inventory.update()
-        self.camera.center_camera_to_player(self.player_sprite)
-        self.optimise()
 
 
 # --- Method 1 for handling click events,
@@ -274,7 +114,7 @@ class LoadingScreen(arcade.View):
             self.window.show_view(self.game_view)
         else:
             self.first_time = False
-        arcade.draw_text(self.text, SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, color=color.WHITE)
+        arcade.draw_text(self.text, config.SCREEN_WIDTH / 2 - 50, config.SCREEN_HEIGHT / 2, color=color.WHITE)
 
 
 class StartView(arcade.View):
@@ -346,7 +186,7 @@ class StartView(arcade.View):
 
         path = Path(__file__).parent.joinpath("../assets/images/")
         self.background = arcade.load_texture(f"{str(path)}/ezgif-frame-{partial_frame}.png")
-        arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
+        arcade.draw_texture_rectangle(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2, config.SCREEN_WIDTH, config.SCREEN_HEIGHT,
                                       self.background)
         self.background = None
         # gc.collect()
@@ -363,7 +203,7 @@ class StartView(arcade.View):
 
 def main():
     """ Main method """
-    window = arcade.Window(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE)
     window.show_view(StartView())
     arcade.run()
 
