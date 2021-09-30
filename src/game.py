@@ -18,6 +18,9 @@ from misc.camera import CustomCamera
 from misc.chunk import HorizontalChunk
 from misc.item import Item
 from misc.terrain import gen_world
+from utils import Timer
+
+DATA_DIR = Path(__file__).parent.parent / "data"
 
 
 class Game(arcade.View):
@@ -122,21 +125,26 @@ class Game(arcade.View):
     def setup_world(self) -> None:
 
         self.whole_world = deque()
-
         self.loaded_chunks = []
         self.loaded_chunks_sprites = deque()
 
-        path = Path(__file__).parent.joinpath("../data")
+        DATA_DIR.mkdir(exist_ok=True)
+
         try:
+            print("Attempting to load existing chunks")
+            timer = Timer("load_world")
+
             for n in range(-31, 31):
                 name = n + 31
-                with gzip.open(f"{str(path)}/pickle{pickle.format_version}_{name}.pickle") as f:
+                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{name}.pickle") as f:
                     chunk = pickle.load(f)
                     h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
                     h_chunk.make_sprite_list(h_chunk.iterable)
                     self.whole_world.append(h_chunk.sprites)
-
+            print(f"Loaded chunks in {timer.stop()} seconds")
         except FileNotFoundError:
+            print("Failed to load chunks. Generating world...")
+            timer = Timer("world_gen")
             for n in range(-31, 31):
                 self.whole_world.append(HorizontalChunk(n * 16))
 
@@ -145,11 +153,16 @@ class Game(arcade.View):
                 n = int(k[1] / 16) + 31
                 self.whole_world[n]['setter'] = chunk
 
+            print(f"Generated world in {timer.stop()} seconds")
+            print("Saving world")
+            timer = Timer("world_save")
             for n, chunk in enumerate(self.whole_world):
-                with gzip.open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
                     pickle.dump(chunk.iterable, f)
                 chunk.make_sprite_list(chunk.iterable)
                 self.whole_world[n] = chunk.sprites
+
+            print(f"Saved wold in {timer.stop()} seconds")
 
         for visible_index in range(int(VISIBLE_RANGE_MIN / 16) + 31, int(VISIBLE_RANGE_MAX / 16) + 31):
             h_chunk = self.whole_world[visible_index]
