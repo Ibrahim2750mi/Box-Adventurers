@@ -57,7 +57,7 @@ class Game(arcade.View):
 
     def optimise(self):
         if (self.player_sprite.chunk + 1 not in self.loaded_chunks,
-            self.player_sprite.last_faced_dir == "right",) == (True, True) and (
+            self.player_sprite.last_faced_dir == "right",) == (True, True) or (
                 self.player_sprite.chunk - 1 not in self.loaded_chunks,
                 self.player_sprite.last_faced_dir == "left",) == (True, True,):
             insert_i = None
