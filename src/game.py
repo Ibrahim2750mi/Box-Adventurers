@@ -52,14 +52,17 @@ class Game(arcade.View):
         for sprite_list_ in self.loaded_chunks_sprites:
             for block in sprite_list_:
                 if block.block_id > 129:
-                    colloidable_blocks.append(block)
+                    try:
+                        colloidable_blocks.append(block)
+                    except ValueError:
+                        pass
         return colloidable_blocks
 
     def optimise(self):
         if (self.player_sprite.chunk + 1 not in self.loaded_chunks,
-            self.player_sprite.last_faced_dir == "right",) == (True, True) and (
+            self.player_sprite.last_faced_dir == "right") == (True, True) or (
                 self.player_sprite.chunk - 1 not in self.loaded_chunks,
-                self.player_sprite.last_faced_dir == "left",) == (True, True,):
+                self.player_sprite.last_faced_dir == "left") == (True, True):
             insert_i = None
             chunk_index = None
             key = None
@@ -82,6 +85,7 @@ class Game(arcade.View):
             except KeyError:
                 pass
             else:
+                print(self.loaded_chunks, h_chunk_)
                 h_chunk_: HorizontalChunk
                 self.loaded_chunks.append(chunk_index)
                 if insert_i:
@@ -116,20 +120,22 @@ class Game(arcade.View):
 
     def setup_world(self) -> None:
 
+        self.whole_world = deque()
+
         self.loaded_chunks = []
         self.loaded_chunks_sprites = deque()
 
         path = Path(__file__).parent.joinpath("../data")
         try:
             for n in range(-31, 31):
-                with open(f"{str(path)}/pickle{pickle.format_version}_{n}.pickle", "rb") as f:
+                name = n + 31
+                with open(f"{str(path)}/pickle{pickle.format_version}_{name}.pickle", "rb") as f:
                     chunk = pickle.load(f)
                     h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
                     h_chunk.make_sprite_list(h_chunk.iterable)
                     self.whole_world.append(h_chunk.sprites)
 
         except FileNotFoundError:
-            self.whole_world = deque()
             for n in range(-31, 31):
                 self.whole_world.append(HorizontalChunk(n * 16))
 
@@ -168,11 +174,11 @@ class Game(arcade.View):
         arcade.start_render()
 
         self.camera.use()
-        self.player_list.draw(pixelated=True)
 
         for sprite_list in self.loaded_chunks_sprites:
             sprite_list.draw(pixelated=True)
 
+        self.player_list.draw(pixelated=True)
         self.hud_camera.use()
         self.player_sprite.inventory.draw()
 
@@ -242,6 +248,7 @@ class LoadingScreen(arcade.View):
         super().__init__()
         self.first_time = True
         self.game_view = game_view
+        self.text = "Loading World"
 
     def on_show(self):
         arcade.set_background_color(color.BLACK)
@@ -253,7 +260,7 @@ class LoadingScreen(arcade.View):
             self.window.show_view(self.game_view)
         else:
             self.first_time = False
-        arcade.draw_text("Loading World...", SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, color=color.WHITE)
+        arcade.draw_text(self.text, SCREEN_WIDTH / 2 - 50, SCREEN_HEIGHT / 2, color=color.WHITE)
 
 
 class StartView(arcade.View):
@@ -323,7 +330,8 @@ class StartView(arcade.View):
         else:
             partial_frame = str(self.frameNum)
 
-        self.background = arcade.load_texture(f"../assets/images/ezgif-frame-{partial_frame}.png")
+        path = Path(__file__).parent.joinpath("../assets/images/")
+        self.background = arcade.load_texture(f"{str(path)}/ezgif-frame-{partial_frame}.png")
         arcade.draw_texture_rectangle(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, SCREEN_WIDTH, SCREEN_HEIGHT,
                                       self.background)
         self.background = None
