@@ -21,8 +21,8 @@ class World:
         """
         self._screen_size = screen_size
         self._name = name
-        self._player_default_x = 20 * 8   # 8 block to the right on the first chunk
-        self._player_default_y = 20 * 210 # 210 chunks up
+        self._player_default_x = 20 * 8  # 8 block to the right on the first chunk
+        self._player_default_y = 20 * 210  # 210 chunks up
 
         # Player
         # TODO: Find a safe initial spawn position
@@ -54,7 +54,7 @@ class World:
         self._active_chunks: deque = deque()
 
         self.camera = CustomCamera(*self._screen_size)
-    
+
     @property
     def player(self) -> Player:
         return self._player_sprite
@@ -64,7 +64,7 @@ class World:
         self.camera.use()
 
         for chunk in self._active_chunks:
-            chunk.spritelist.draw(pixelated=True)
+            chunk.draw()
 
         self._player_list.draw(pixelated=True)
         self.debug_draw_chunks()
@@ -140,7 +140,6 @@ class World:
                     chunk.make_sprite_list()
                     self._whole_world[n] = chunk
                 print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
-
 
             print(f"Loaded chunks in {load_timer.stop()} seconds")
         except FileNotFoundError:

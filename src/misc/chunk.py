@@ -21,7 +21,10 @@ class HorizontalChunk:
         self.world_x = x * config.SPRITE_PIXEL_SIZE - config.SPRITE_PIXEL_SIZE // 2
         self._y = 0
         self._chunks = 0
-        self._spritelist = arcade.SpriteList(use_spatial_hash=True)
+
+        self._blocks = arcade.SpriteList(use_spatial_hash=True)
+        self._bg_blocks = arcade.SpriteList(use_spatial_hash=True)
+
         self.bg_block_count = 0
         self.other_block_count = 0
 
@@ -35,7 +38,7 @@ class HorizontalChunk:
 
     @property
     def spritelist(self) -> arcade.SpriteList:
-        return self._spritelist
+        return self._blocks
 
     def is_visible(self, x_pos: float, max_dist: float) -> bool:
         """Is this chunk visible (in pixels)"""
@@ -57,9 +60,8 @@ class HorizontalChunk:
 
     def make_sprite_list(self):
         for (x_inc, y_inc), block_id in self.data.items():
-            # HACK: Remove air blocks for now
-            if block_id < 130:
-                continue
+            # HACK: Remove air blocks for now. No longer the hack is needed.
+
             block = Block(
                 width=config.SPRITE_PIXEL_SIZE,
                 height=config.SPRITE_PIXEL_SIZE,
@@ -69,7 +71,11 @@ class HorizontalChunk:
                 bright=False,
                 center_x=(self._x + x_inc) * config.SPRITE_PIXEL_SIZE,
                 center_y=y_inc * config.SPRITE_PIXEL_SIZE)
-            self._spritelist.append(block)
+
+            if block_id > 129:
+                self._blocks.append(block)
+            else:
+                self._bg_blocks.append(block)
 
     def __getitem__(self, key: int):
         return self.data[key]
@@ -90,3 +96,7 @@ class HorizontalChunk:
 
     def __repr__(self):
         return f"Chunk[{self.index}]"
+
+    def draw(self):
+        self._blocks.draw(pixelated=True)
+        self._bg_blocks.draw(pixelated=True)
