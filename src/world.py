@@ -1,6 +1,5 @@
 import gzip
 import pickle
-from pathlib import Path
 from collections import deque
 from typing import Tuple
 
@@ -24,6 +23,7 @@ class World:
         self._name = name
 
         # Player
+        # TODO: Find a safe initial spawn position
         self._player_list: arcade.SpriteList = arcade.SpriteList()
         self._player_sprite = Player(
             "player",
@@ -76,16 +76,16 @@ class World:
             self._loaded_chunks.append(visible_index)
             self._loaded_chunks_sprites.append(h_chunk)
 
-        self._physics_engine.platforms = [self.get_colloidal_blocks()]
+        self._physics_engine.platforms = list(self._loaded_chunks_sprites)
 
     def update(self):
         """Called every frame to update the world state"""
-        self._physics_engine.update()
         self.camera.center_camera_to_player(self._player_sprite)
         self._optimize()
+        self._physics_engine.update()
 
     def _optimize(self):
-        """Keep this around for now"""
+        """Detect and update visible chunks"""
         if (self._player_sprite.chunk + 1 not in self._loaded_chunks,
             self._player_sprite.last_faced_dir == "right") == (True, True) or (
                 self._player_sprite.chunk - 1 not in self._loaded_chunks,
@@ -121,19 +121,20 @@ class World:
                     self._loaded_chunks_sprites.append(h_chunk_)
 
                 self._loaded_chunks.pop(self._loaded_chunks.index(key))
-                self._physics_engine.platforms = [self.get_colloidal_blocks()]
 
-    def get_colloidal_blocks(self):
-        colloidable_blocks = arcade.SpriteList()
+            self._physics_engine.platforms = list(self._loaded_chunks_sprites)
 
-        for sprite_list in self._loaded_chunks_sprites:
-            for block in sprite_list:
-                if block.block_id > 129:
-                    try:
-                        colloidable_blocks.append(block)
-                    except ValueError:
-                        pass
-        return colloidable_blocks
+    # def get_colloidal_blocks(self):
+    #     colloidable_blocks = arcade.SpriteList()
+
+    #     for sprite_list in self._loaded_chunks_sprites:
+    #         for block in sprite_list:
+    #             if block.block_id > 129:
+    #                 try:
+    #                     colloidable_blocks.append(block)
+    #                 except ValueError:
+    #                     pass
+    #     return colloidable_blocks
 
     def setup_world(self) -> None:
         config.DATA_DIR.mkdir(exist_ok=True)

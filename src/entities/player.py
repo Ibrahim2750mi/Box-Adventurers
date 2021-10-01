@@ -1,5 +1,4 @@
 from enum import Enum
-from pathlib import Path
 from typing import Optional
 
 from arcade import key, load_texture

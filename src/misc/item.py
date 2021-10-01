@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from arcade import Sprite, draw_text
 from arcade.csscolor import WHITE
 import config

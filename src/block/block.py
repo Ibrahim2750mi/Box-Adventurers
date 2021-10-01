@@ -1,10 +1,8 @@
 import time
-from pathlib import Path
 from typing import Optional
 
 import arcade
 from arcade.texture import load_texture
-from PIL import Image
 
 from misc.item import Item
 import config

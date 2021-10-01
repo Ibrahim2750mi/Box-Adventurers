@@ -42,10 +42,19 @@ class HorizontalChunk:
         return self._iterable
     
     def make_sprite_list(self, dict_of_ids: Dict):
-        for (x_inc, y_inc), block_ in dict_of_ids.items():
-            block = Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block_, False,
-                          center_x=(self._x + x_inc) * SPRITE_PIXEL_SIZE,
-                          center_y=y_inc * SPRITE_PIXEL_SIZE)
+        for (x_inc, y_inc), block_id in dict_of_ids.items():
+            # HACK: Remove air blocks for now
+            if block_id < 130:
+                continue
+            block = Block(
+                width=SPRITE_PIXEL_SIZE,
+                height= SPRITE_PIXEL_SIZE,
+                breaking_time=2,
+                hp=2,
+                block_id=block_id,
+                bright=False,
+                center_x=(self._x + x_inc) * SPRITE_PIXEL_SIZE,
+                center_y=y_inc * SPRITE_PIXEL_SIZE)
             self._sprites.append(block)
 
     @property
