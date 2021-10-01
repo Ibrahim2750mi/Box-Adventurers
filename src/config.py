@@ -1,3 +1,8 @@
+from pathlib import Path
+
+ASSET_DIR = (Path(__file__).parent.parent / "assets").resolve()
+DATA_DIR = (Path(__file__).parent.parent / "data").resolve()
+
 SPRITE_SCALING = 0.5
 INVENTORY_SCALING = SPRITE_SCALING * 6
 PLAYER_SCALING = 0.85
@@ -20,3 +25,5 @@ MAX_SLOTS = 11
 MAX_STACK = 32
 VISIBLE_RANGE_MAX = int((2 * SPRITE_PIXEL_SIZE) / SPRITE_SCALING)
 VISIBLE_RANGE_MIN = int((-2 * SPRITE_PIXEL_SIZE) / SPRITE_SCALING)
+
+MUSIC = True

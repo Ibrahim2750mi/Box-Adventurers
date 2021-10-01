@@ -7,7 +7,7 @@ import arcade
 
 from entities.entity import Entity
 from misc.inventory import Inventory
-
+import config
 
 class Direction(Enum):
     LEFT = 0
@@ -49,9 +49,12 @@ class Player(Entity):
         :param flipped_horizontally: Should the player sprite be flipped.
         :type flipped_horizontally: bool
         """
-        path = Path(__file__).parent.joinpath(f"../../assets/mobs/{image_file}.png")
         super().__init__(
-            str(path), scale * 5 / 2, center_x, center_y, flipped_horizontally)
+            config.ASSET_DIR / "mobs" / f"{image_file}.png",
+            scale * 5 / 2,
+            center_x, center_y,
+            flipped_horizontally,
+        )
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.movement_speed = movement_speed
@@ -59,8 +62,8 @@ class Player(Entity):
         self.direction: Optional[Direction] = None
         self.last_faced_dir = "left"
         self.textures = []
-        self.textures.append(load_texture(str(path)))
-        self.textures.append(load_texture(str(path), flipped_horizontally=True))
+        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png",))
+        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png", flipped_horizontally=True))
         self._physics_engine: arcade.PhysicsEnginePlatformer = None
         self.inventory = Inventory()
 

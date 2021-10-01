@@ -27,9 +27,10 @@ class Game(arcade.View):
 
         self.world.player.inventory.setup_coords(self.window.get_size())
 
-        # path = Path(__file__).parent.joinpath("../assets/music/main_game_tune.wav")
-        # self.bg_music = arcade.Sound(path)
-        # self.bg_music.play(loop=True)
+        self.bg_music = None
+        if config.MUSIC:
+            self.bg_music = arcade.Sound(config.ASSET_DIR / "music" / "main_game_tune.wav")
+            self.bg_music.play(loop=True)
 
     def setup(self):
         self.world.create()
@@ -60,9 +61,17 @@ class Game(arcade.View):
         tmp_x = x - 600 + player.x
         tmp_y = y - 347 + player.y
         distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
-        path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
-        block = arcade.get_closest_sprite(arcade.Sprite(
-            str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.world.get_colloidal_blocks())
+
+        block = arcade.get_closest_sprite(
+            arcade.Sprite(
+                config.ASSET_DIR / "sprites" / "mouse_point.png",
+                image_width=2,
+                image_height=2,
+                center_x=tmp_x,
+                center_y=tmp_y
+            ),
+            self.world.get_colloidal_blocks(),
+        )
 
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
@@ -124,6 +133,7 @@ class StartView(arcade.View):
         # --- Required for all code that uses UI element,
         # a UIManager to handle the UI.
         self.manager = arcade.gui.UIManager()
+        # Enable UI events
         self.manager.enable()
 
         # Set background color
@@ -184,12 +194,14 @@ class StartView(arcade.View):
         else:
             partial_frame = str(self.frameNum)
 
-        path = Path(__file__).parent.joinpath("../assets/images/")
-        self.background = arcade.load_texture(f"{str(path)}/ezgif-frame-{partial_frame}.png")
-        arcade.draw_texture_rectangle(config.SCREEN_WIDTH // 2, config.SCREEN_HEIGHT // 2, config.SCREEN_WIDTH, config.SCREEN_HEIGHT,
-                                      self.background)
-        self.background = None
-        # gc.collect()
+        self.background = arcade.load_texture(config.ASSET_DIR / "images" / f"ezgif-frame-{partial_frame}.png")
+        arcade.draw_texture_rectangle(
+            config.SCREEN_WIDTH // 2,
+            config.SCREEN_HEIGHT // 2,
+            config.SCREEN_WIDTH,
+            config.SCREEN_HEIGHT,
+            self.background,
+        )
         # changing it to the next frame
         self.frameNum += 1
         if self.frameNum > self.maxFrames:
@@ -198,6 +210,7 @@ class StartView(arcade.View):
         self.manager.draw()
 
     def on_view_hide(self):
+        """Disable the UI events"""
         self.manager.disable()
 
 

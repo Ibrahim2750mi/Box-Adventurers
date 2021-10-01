@@ -4,20 +4,39 @@ from typing import Optional
 
 import arcade
 from arcade.texture import load_texture
-from PIL import Image, ImageEnhance
+from PIL import Image
 
 from misc.item import Item
+import config
 
-BREAK_TEXTURES_PATH = Path(__file__).parent.joinpath(f"../../assets/animations/")
-BREAK_TEXTURES = [arcade.Texture(path, Image.open(path)) for path in BREAK_TEXTURES_PATH.iterdir()]
+BREAK_TEXTURES = [arcade.load_texture(path) for path in (config.ASSET_DIR / "animations").iterdir()]
 
 
 class Block(arcade.Sprite):
-    def __init__(self, width, height, breaking_time, hp, block_id, bright, *args, scale=1,
-                 center_x=0, center_y=0, **kwargs):
-        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
-        super().__init__(filename=str(path), scale=scale, center_x=center_x, center_y=center_y,
-                         image_width=width, image_height=height, *args, **kwargs)
+    def __init__(
+        self,
+        width,
+        height,
+        breaking_time,
+        hp,
+        block_id,
+        bright,
+        *args,
+        scale=1,
+        center_x=0,
+        center_y=0,
+        **kwargs
+    ):
+        super().__init__(
+            filename=config.ASSET_DIR / "sprites" / f"{block_id}.png",
+            scale=scale,
+            center_x=center_x,
+            center_y=center_y,
+            image_width=width,
+            image_height=height,
+            *args,
+            **kwargs
+        )
         # self.place_sound = place_sound
         # arcade.Sound(place_sound).play()
         self.block_id = block_id
@@ -49,10 +68,11 @@ class Block(arcade.Sprite):
         # self.break_mask.add_break_state()
         time.sleep(self.breaking_time)
 
-    def bright_set(self, bright):
-        self.bright = bright
-        enhancer = ImageEnhance.Brightness(self.ORIGINAL_IMAGE)
-        self.texture.image = enhancer.enhance(bright)
+    # NOTE: This should use sprite color instead
+    # def bright_set(self, bright):
+    #     self.bright = bright
+    #     enhancer = ImageEnhance.Brightness(self.ORIGINAL_IMAGE)
+    #     self.texture.image = enhancer.enhance(bright)
 
     def _break(self, delta_time) -> Optional[Item]:
         self.break_time_left -= delta_time
@@ -67,5 +87,4 @@ class Block(arcade.Sprite):
         self.texture = self.orig_texture
 
     def break_(self, block_id) -> None:
-        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
-        self.texture = load_texture(path)
+        self.texture = load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png")

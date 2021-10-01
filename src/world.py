@@ -12,8 +12,6 @@ from utils import Timer
 from misc.chunk import HorizontalChunk
 import config
 
-DATA_DIR = Path(__file__).parent.parent / "data"
-
 
 class World:
 
@@ -138,14 +136,14 @@ class World:
         return colloidable_blocks
 
     def setup_world(self) -> None:
-        DATA_DIR.mkdir(exist_ok=True)
+        config.DATA_DIR.mkdir(exist_ok=True)
         try:
             print("Attempting to load existing chunks")
             timer = Timer("load_world")
 
             for n in range(-31, 31):
                 name = n + 31
-                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{name}.pickle") as f:
+                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{name}.pickle") as f:
                     chunk = pickle.load(f)
                     h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
                     h_chunk.make_sprite_list(h_chunk.iterable)
@@ -166,7 +164,7 @@ class World:
             print("Saving world")
             timer = Timer("world_save")
             for n, chunk in enumerate(self._whole_world):
-                with gzip.open(DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
                     pickle.dump(chunk.iterable, f)
                 chunk.make_sprite_list(chunk.iterable)
                 self._whole_world[n] = chunk.sprites

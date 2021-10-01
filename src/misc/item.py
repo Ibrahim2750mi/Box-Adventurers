@@ -2,18 +2,21 @@ from pathlib import Path
 
 from arcade import Sprite, draw_text
 from arcade.csscolor import WHITE
-
-from config import ICON_SIZE, INVENTORY_SCALING
-
+import config
 
 class Item(Sprite):
+
     def __init__(self, stackable: bool, block_id: int, *args, **kwargs):
-        path = Path(__file__).parent.joinpath(f"../../assets/sprites/{block_id}.png")
-        super().__init__(filename=str(path), scale=INVENTORY_SCALING, *args, **kwargs)
+        super().__init__(
+            filename=config.ASSET_DIR / "sprites" / f"{block_id}.png",
+            scale=config.INVENTORY_SCALING,
+            *args,
+            **kwargs,
+        )
         self.stackable = stackable
         self.amount = 1
-        self.width = ICON_SIZE * INVENTORY_SCALING
-        self.height = ICON_SIZE * INVENTORY_SCALING
+        self.width = config.ICON_SIZE * config.INVENTORY_SCALING
+        self.height = config.ICON_SIZE * config.INVENTORY_SCALING
         self.block_id = block_id
 
     def draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
