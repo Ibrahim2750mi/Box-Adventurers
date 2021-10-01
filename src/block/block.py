@@ -86,5 +86,5 @@ class Block(arcade.Sprite):
         self.break_time_left = self.breaking_time
         self.texture = self.orig_texture
 
-    def break_(self, block_id) -> None:
-        self.texture = load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png")
+    # def break_(self, block_id) -> None:
+    #     self.texture = load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png")

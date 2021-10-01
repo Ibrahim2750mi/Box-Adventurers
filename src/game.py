@@ -60,9 +60,13 @@ class Game(arcade.View):
         player = self.world.player
         tmp_x = x - 600 + player.x
         tmp_y = y - 347 + player.y
-        distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
+        # distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
 
-        block = arcade.get_closest_sprite(
+        # TODO: This part needs work
+        chunk = self.world._whole_world.get(self.world._player_sprite.chunk)
+        if not chunk:
+            return
+        block, block_dist = arcade.get_closest_sprite(
             arcade.Sprite(
                 config.ASSET_DIR / "sprites" / "mouse_point.png",
                 image_width=2,
@@ -70,13 +74,14 @@ class Game(arcade.View):
                 center_x=tmp_x,
                 center_y=tmp_y
             ),
-            self.world.get_colloidal_blocks(),
+            chunk.spritelist,
         )
 
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
-            block: Tuple[Block, float]
-            distance <= 100 and block[0].block_id > 129 and self.break_block(block[0])
+            if block_dist <= 100:
+                self.world.player.inventory.add(Item(True, block.block_id))
+                block.remove_from_sprite_lists()
 
         # elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
         #     distance <= 100 and block[0].block_id <= 129 and self.place_block)
@@ -87,16 +92,6 @@ class Game(arcade.View):
             self.break_cooldown = False
         if button == MOUSE_BUTTON_RIGHT:
             self.place_cooldown = False
-
-    def break_block(self, block: Block):
-        self.world.player.inventory.add(Item(True, block.block_id))
-        block.break_(128)
-
-        # Remove block from world
-        for sprite_list in self.world._loaded_chunks_sprites:
-            if block in sprite_list:
-                sprite_list.remove(block)
-        self.break_cooldown = True
 
 
 # --- Method 1 for handling click events,
