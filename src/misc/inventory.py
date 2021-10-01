@@ -1,12 +1,10 @@
-from pathlib import Path
 from typing import Optional
 
 from arcade import Sprite
 from pyglet.math import Vec2
 
-from config import INVENTORY_SCALING, MAX_SLOTS, MAX_STACK, SCREEN_WIDTH
 from misc.item import Item
-
+import config
 
 class InventoryFullError(Exception):
     def __init__(self) -> None:
@@ -15,9 +13,13 @@ class InventoryFullError(Exception):
 
 class Inventory(Sprite):
     def __init__(self) -> None:
-        path = Path(__file__).parent.joinpath("../../assets/sprites/inventory.png")
-        super().__init__(filename=str(path), center_x=0, center_y=0, scale=INVENTORY_SCALING)
-        self.max_slots: int = MAX_SLOTS
+        super().__init__(
+            filename=config.ASSET_DIR / "sprites" / "inventory.png",
+            center_x=0,
+            center_y=0,
+            scale=config.INVENTORY_SCALING,
+        )
+        self.max_slots: int = config.MAX_SLOTS
         self.slots: dict[int, Optional[Item]] = {i: None for i in range(1, self.max_slots + 1)}
         self.filled_slots = 0
 
@@ -30,7 +32,7 @@ class Inventory(Sprite):
                 slot_item = self.slots[i]
                 if slot_item is not None and slot_item.block_id == item.block_id:
                     added = True
-                    if slot_item.amount == MAX_STACK:
+                    if slot_item.amount == config.MAX_STACK:
                         self.slots[self.get_free_slot()] = item
                         self.filled_slots += 1
                     else:
@@ -41,7 +43,7 @@ class Inventory(Sprite):
             self.filled_slots += 1
 
     def setup_coords(self, pos: Vec2) -> None:
-        self.center_x = pos[0] + SCREEN_WIDTH / 2
+        self.center_x = pos[0] + config.SCREEN_WIDTH / 2
         self.center_y = pos[1] + self.height / 2
 
     def get_free_slot(self) -> int:

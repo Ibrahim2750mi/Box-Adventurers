@@ -1,12 +1,12 @@
 from enum import Enum
-from pathlib import Path
 from typing import Optional
 
 from arcade import key, load_texture
+import arcade
 
 from entities.entity import Entity
 from misc.inventory import Inventory
-
+import config
 
 class Direction(Enum):
     LEFT = 0
@@ -16,8 +16,17 @@ class Direction(Enum):
 class Player(Entity):
 
     def __init__(
-            self, image_file: str, scale: float, center_x: float, center_y: float, screen_width: int,
-            screen_height: int, movement_speed: float, jump_speed: float, flipped_horizontally: bool) -> None:
+            self,
+            image_file: str,
+            scale: float,
+            center_x: float,
+            center_y: float,
+            screen_width: int,
+            screen_height: int,
+            movement_speed: float,
+            jump_speed: float,
+            flipped_horizontally: bool,
+        ) -> None:
         """Initialize the Player.
 
         :param image_file: Path to the image file.
@@ -39,23 +48,41 @@ class Player(Entity):
         :param flipped_horizontally: Should the player sprite be flipped.
         :type flipped_horizontally: bool
         """
-        path = Path(__file__).parent.joinpath(f"../../assets/mobs/{image_file}.png")
         super().__init__(
-            str(path), scale * 5 / 2, center_x, center_y, flipped_horizontally)
+            config.ASSET_DIR / "mobs" / f"{image_file}.png",
+            scale * 5 / 2,
+            center_x, center_y,
+            flipped_horizontally,
+        )
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.movement_speed = movement_speed
         self.jump_speed = jump_speed
         self.direction: Optional[Direction] = None
-        self.inventory = Inventory()
         self.last_faced_dir = "left"
         self.textures = []
-        self.textures.append(load_texture(str(path)))
-        self.textures.append(load_texture(str(path), flipped_horizontally=True))
+        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png",))
+        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png", flipped_horizontally=True))
+        self._physics_engine: arcade.PhysicsEnginePlatformer = None
+        self.inventory = Inventory()
 
-    def on_key_press(
-            self, key_pressed: int, modifier: int,
-            can_jump: bool) -> None:
+    @property
+    def physics_engine(self) -> arcade.PhysicsEnginePlatformer:
+        return self._physics_engine
+
+    @physics_engine.setter
+    def physics_engine(self, value):
+        self._physics_engine = value
+
+    @property
+    def x(self) -> float:
+        return self.center_x
+
+    @property
+    def y(self) -> float:
+        return self.center_y
+
+    def on_key_press(self, key_pressed: int, modifier: int) -> None:
         """Called whenever a key is pressed.
 
         :param key_pressed: Key that got pressed.
@@ -66,7 +93,7 @@ class Player(Entity):
         :type can_jump: bool
         """
         if key_pressed == key.UP:
-            if can_jump:
+            if self.physics_engine.can_jump():
                 self.change_y = self.jump_speed
         elif key_pressed == key.LEFT:
             self.change_x = -self.movement_speed
@@ -84,7 +111,7 @@ class Player(Entity):
 
         :param key_pressed: Key that was released.
         :type key_pressed: int
-        :param modifiers: Mofidiers that were released with the key.
+        :param modifiers: Modifiers that were released with the key.
         :type modifiers: int
         """
         if key_released in (key.LEFT, key.RIGHT):
@@ -93,4 +120,5 @@ class Player(Entity):
 
     @property
     def chunk(self):
-        return int(self.center_x / 224) + 31
+        """The chunk index the player is located in"""
+        return int(self.center_x // 320)
