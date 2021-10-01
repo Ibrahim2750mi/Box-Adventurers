@@ -8,7 +8,9 @@ from misc.item import Item
 import config
 
 BREAK_TEXTURES = [arcade.load_texture(path) for path in (config.ASSET_DIR / "animations").iterdir()]
-
+BLOCK_TEXTURES = {
+    block_id: arcade.load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png") for block_id in range(128, 156)
+}
 
 class Block(arcade.Sprite):
     def __init__(
@@ -26,7 +28,7 @@ class Block(arcade.Sprite):
         **kwargs
     ):
         super().__init__(
-            filename=config.ASSET_DIR / "sprites" / f"{block_id}.png",
+            texture=BLOCK_TEXTURES[block_id],
             scale=scale,
             center_x=center_x,
             center_y=center_y,

@@ -140,16 +140,19 @@ class World:
         config.DATA_DIR.mkdir(exist_ok=True)
         try:
             print("Attempting to load existing chunks")
-            timer = Timer("load_world")
+            load_timer = Timer("load_world")
 
             for n in range(-31, 31):
+                chunk_timer = Timer("chunk_load")
                 name = n + 31
                 with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{name}.pickle") as f:
                     chunk = pickle.load(f)
                     h_chunk: HorizontalChunk = HorizontalChunk(n * 16, chunk)
                     h_chunk.make_sprite_list(h_chunk.iterable)
                     self._whole_world.append(h_chunk.sprites)
-            print(f"Loaded chunks in {timer.stop()} seconds")
+                print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
+
+            print(f"Loaded chunks in {load_timer.stop()} seconds")
         except FileNotFoundError:
             print("Failed to load chunks. Generating world...")
             timer = Timer("world_gen")
@@ -172,4 +175,6 @@ class World:
 
             print(f"Saved wold in {timer.stop()} seconds")
 
-
+    def debug_draw_chunks(self):
+        """Draw chunk borders with lines"""
+        pass
