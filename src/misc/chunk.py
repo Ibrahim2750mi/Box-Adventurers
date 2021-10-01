@@ -5,8 +5,7 @@ import numpy as np
 import numpy.typing as npt
 
 from block.block import Block
-from config import (SPRITE_PIXEL_SIZE)
-
+import config
 
 class HorizontalChunk:
     def __init__(self, x: int, chunk: Optional[Dict] = None):
@@ -47,14 +46,14 @@ class HorizontalChunk:
             if block_id < 130:
                 continue
             block = Block(
-                width=SPRITE_PIXEL_SIZE,
-                height= SPRITE_PIXEL_SIZE,
+                width=config.SPRITE_PIXEL_SIZE,
+                height=config.SPRITE_PIXEL_SIZE,
                 breaking_time=2,
                 hp=2,
                 block_id=block_id,
                 bright=False,
-                center_x=(self._x + x_inc) * SPRITE_PIXEL_SIZE,
-                center_y=y_inc * SPRITE_PIXEL_SIZE)
+                center_x=(self._x + x_inc) * config.SPRITE_PIXEL_SIZE,
+                center_y=y_inc * config.SPRITE_PIXEL_SIZE)
             self._sprites.append(block)
 
     @property
