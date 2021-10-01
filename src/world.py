@@ -100,7 +100,7 @@ class World:
         # Fill visible chunks from left side
         while self._active_chunks[0].is_visible(player_x, view_dist):
             new_chunk = self._whole_world.get(self._active_chunks[0].index - 1)
-            if not new_chunk:
+            if not new_chunk or not new_chunk.is_visible(player_x, view_dist):
                 break
             self._active_chunks.appendleft(new_chunk)
             changed = True
@@ -108,25 +108,24 @@ class World:
         # Fill visible chunks from right side
         while self._active_chunks[-1].is_visible(player_x, view_dist):
             new_chunk = self._whole_world.get(self._active_chunks[-1].index + 1)
-            if not new_chunk:
+            if not new_chunk or not new_chunk.is_visible(player_x, view_dist):
                 break
             self._active_chunks.append(new_chunk)
             changed = True
 
         # Remove invisible chunks from left side
         while self._active_chunks and not self._active_chunks[0].is_visible(player_x, view_dist):
-            self._active_chunks.popleft()
+            chunk = self._active_chunks.popleft()
             changed = True
 
         # Remove invisible chunks from right side
         while self._active_chunks and not self._active_chunks[-1].is_visible(player_x, view_dist):
-            self._active_chunks.pop()
+            chunk = self._active_chunks.pop()
             changed = True
 
         # Update chunks for the physics engine
         if changed:
             self._physics_engine.platforms = [chunk.spritelist for chunk in self._active_chunks]
-            print("visible chunks", self._active_chunks)
 
     def setup_world(self) -> None:
         config.DATA_DIR.mkdir(exist_ok=True)
