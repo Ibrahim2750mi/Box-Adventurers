@@ -19,13 +19,18 @@ specific objective in the game you can try reaching the world border.
 * SReaperz: block breaking, player class, inventory, camera, entity class
 * jack_sparrow: start screen
 
-# BUGS
+## BUGS
 
 * While in unloading chunks it gives error leading the game to crashing, reason
   when we break a block it doesn't removes the block from the loaded chunk in
   the list, didn't had time to solve this. Also a physical fix is that increasing
   the `VISIBLE_RANGE_MAX` and `VISIBLE_RANGE_MIN` in config.py| (SOLVED)
 
-# How to Run
+## How to Run
 
-after installing the libs in `requirements.txt` do `python src/game.py`
+After installing the libs in `requirements.txt` do `python src/game.py`
+
+## Notes
+
+* A block is 20 x 20 pixels
+* Each HorizontalChunk is 16 x 320 blocks

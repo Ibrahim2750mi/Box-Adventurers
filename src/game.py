@@ -24,7 +24,8 @@ class Game(arcade.View):
         self.hud_camera = arcade.Camera(*self.window.get_size())
         self.world = World(screen_size=self.window.get_size(), name="default")
 
-        self.world.player.inventory.setup_coords(self.window.get_size())
+        # TODO: Is this necessary?
+        self.world.player.inventory.setup_coords((0, 0))
 
         self.bg_music = None
         if config.MUSIC:
