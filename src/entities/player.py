@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import Optional
 
 from arcade import key, load_texture
+import arcade
 
 from entities.entity import Entity
+from misc.inventory import Inventory
 
 
 class Direction(Enum):
@@ -15,8 +17,17 @@ class Direction(Enum):
 class Player(Entity):
 
     def __init__(
-            self, image_file: str, scale: float, center_x: float, center_y: float, screen_width: int,
-            screen_height: int, movement_speed: float, jump_speed: float, flipped_horizontally: bool) -> None:
+            self,
+            image_file: str,
+            scale: float,
+            center_x: float,
+            center_y: float,
+            screen_width: int,
+            screen_height: int,
+            movement_speed: float,
+            jump_speed: float,
+            flipped_horizontally: bool,
+        ) -> None:
         """Initialize the Player.
 
         :param image_file: Path to the image file.
@@ -50,10 +61,26 @@ class Player(Entity):
         self.textures = []
         self.textures.append(load_texture(str(path)))
         self.textures.append(load_texture(str(path), flipped_horizontally=True))
+        self._physics_engine: arcade.PhysicsEnginePlatformer = None
+        self.inventory = Inventory()
 
-    def on_key_press(
-            self, key_pressed: int, modifier: int,
-            can_jump: bool) -> None:
+    @property
+    def physics_engine(self) -> arcade.PhysicsEnginePlatformer:
+        return self._physics_engine
+
+    @physics_engine.setter
+    def physics_engine(self, value):
+        self._physics_engine = value
+
+    @property
+    def x(self) -> float:
+        return self.center_x
+
+    @property
+    def y(self) -> float:
+        return self.center_y
+
+    def on_key_press(self, key_pressed: int, modifier: int) -> None:
         """Called whenever a key is pressed.
 
         :param key_pressed: Key that got pressed.
@@ -64,7 +91,7 @@ class Player(Entity):
         :type can_jump: bool
         """
         if key_pressed == key.UP:
-            if can_jump:
+            if self.physics_engine.can_jump():
                 self.change_y = self.jump_speed
         elif key_pressed == key.LEFT:
             self.change_x = -self.movement_speed
@@ -82,7 +109,7 @@ class Player(Entity):
 
         :param key_pressed: Key that was released.
         :type key_pressed: int
-        :param modifiers: Mofidiers that were released with the key.
+        :param modifiers: Modifiers that were released with the key.
         :type modifiers: int
         """
         if key_released in (key.LEFT, key.RIGHT):

@@ -5,7 +5,6 @@ from collections import deque
 from typing import Tuple
 
 import arcade
-
 from entities.player import Player
 from misc.camera import CustomCamera
 from misc.terrain import gen_world
@@ -28,8 +27,6 @@ class World:
 
         # Player
         self._player_list: arcade.SpriteList = arcade.SpriteList()
-
-        self._player_sprite: Player = None
         self._player_sprite = Player(
             "player",
             scale=config.PLAYER_SCALING,
@@ -43,18 +40,24 @@ class World:
         )
         self._player_list.append(self._player_sprite)
 
-        # Chunks
-        self._whole_world: deque = deque()
-        self._loaded_chunks: list = []
-        self._loaded_chunks_sprites: deque = deque()
-
         # Initial physics engine with no chunks
         self._physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(
             self._player_sprite,
             [],
             gravity_constant=config.GRAVITY,
         )
+        self._player_sprite.physics_engine = self._physics_engine
+
+        # Chunks
+        self._whole_world: deque = deque()
+        self._loaded_chunks: list = []
+        self._loaded_chunks_sprites: deque = deque()
+
         self.camera = CustomCamera(*self._screen_size)
+    
+    @property
+    def player(self) -> Player:
+        return self._player_sprite
 
     def draw(self):
         self.camera.use()
@@ -120,11 +123,7 @@ class World:
                     self._loaded_chunks_sprites.append(h_chunk_)
 
                 self._loaded_chunks.pop(self._loaded_chunks.index(key))
-                self._physics_engine = arcade.PhysicsEnginePlatformer(
-                    self._player_sprite,
-                    self.get_colloidal_blocks(),
-                    config.GRAVITY,
-                )
+                self._physics_engine.platforms = [self.get_colloidal_blocks()]
 
     def get_colloidal_blocks(self):
         colloidable_blocks = arcade.SpriteList()
@@ -173,3 +172,5 @@ class World:
                 self._whole_world[n] = chunk.sprites
 
             print(f"Saved wold in {timer.stop()} seconds")
+
+

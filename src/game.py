@@ -9,8 +9,8 @@ from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 from block.block import Block
 from misc.item import Item
 from world import World
-from misc.inventory import Inventory
 import config
+
 
 class Game(arcade.View):
     """Base game class"""
@@ -24,8 +24,8 @@ class Game(arcade.View):
         self.place_cooldown = False
         self.hud_camera = arcade.Camera(*self.window.get_size())
         self.world = World(screen_size=self.window.get_size(), name="default")
-        self.inventory = Inventory()
-        self.inventory.setup_coords(self.window.get_size())
+
+        self.world.player.inventory.setup_coords(self.window.get_size())
 
         # path = Path(__file__).parent.joinpath("../assets/music/main_game_tune.wav")
         # self.bg_music = arcade.Sound(path)
@@ -36,30 +36,30 @@ class Game(arcade.View):
 
     def on_draw(self) -> None:
         self.window.clear()
+
         self.world.draw()
+
         self.hud_camera.use()
-        self.inventory.draw()
+        self.world.player.inventory.draw()
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
         self.world.update()
-        self.inventory.update()
+        self.world.player.inventory.update()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
-        """
-        Called whenever the mouse moves.
-        """
-        self.world._player_sprite.on_key_press(key, modifiers, self.world._physics_engine.can_jump())
+        """Called when keyboard is pressed"""
+        self.world.player.on_key_press(key, modifiers)
 
     def on_key_release(self, key: int, modifiers: int) -> None:
-        """Called when the user presses a mouse button."""
-        self.world._player_sprite.on_key_release(key, modifiers)
+        """Called when keyboard is released"""
+        self.world.player.on_key_release(key, modifiers)
 
     def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
-        # self.camera.center_camera_to_player(self.player_sprite)
-        tmp_x = x - 600 + self.world._player_sprite.center_x
-        tmp_y = y - 347 + self.world._player_sprite.center_y
-        distance = math.sqrt((tmp_x - self.world._player_sprite.center_x) ** 2 + (tmp_y - self.world._player_sprite.center_y) ** 2)
+        player = self.world.player
+        tmp_x = x - 600 + player.x
+        tmp_y = y - 347 + player.y
+        distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
         path = Path(__file__).parent.joinpath("../assets/sprites/mouse_point.png")
         block = arcade.get_closest_sprite(arcade.Sprite(
             str(path), image_width=2, image_height=2, center_x=tmp_x, center_y=tmp_y), self.world.get_colloidal_blocks())
@@ -80,7 +80,7 @@ class Game(arcade.View):
             self.place_cooldown = False
 
     def break_block(self, block: Block):
-        self.inventory.add(Item(True, block.block_id))
+        self.world.player.inventory.add(Item(True, block.block_id))
         block.break_(128)
 
         # Remove block from world
