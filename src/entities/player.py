@@ -120,4 +120,5 @@ class Player(Entity):
 
     @property
     def chunk(self):
-        return int(self.center_x / 224) + 31
+        """The chunk index the player is located in"""
+        return int(self.center_x // 320 + 31)
