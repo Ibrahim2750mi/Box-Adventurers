@@ -139,7 +139,7 @@ class StartView(arcade.View):
         # arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
         self.background = None
         self.frameNum = 1
-        self.maxFrames = 155  # 390
+        self.maxFrames = 1 # 155
 
         # Create a vertical BoxGroup to align buttons
         self.v_box = arcade.gui.UIBoxLayout()
@@ -182,7 +182,7 @@ class StartView(arcade.View):
         self.window.show_view(loading_screen)
 
     def on_draw(self):
-        arcade.start_render()
+        self.window.clear()
 
         # background gif
         # showing the background image
