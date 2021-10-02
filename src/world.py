@@ -79,7 +79,7 @@ class World:
 
     def create(self):
         """Create the initial world state"""
-        self.setup_world()
+        yield from self.setup_world()
 
     def _update_visible_chunks(self):
         """Detect and update visible chunks"""
@@ -139,6 +139,9 @@ class World:
                     chunk = HorizontalChunk(n * 16, n, pickle.load(f))
                     chunk.make_sprite_list()
                     self._whole_world[n] = chunk
+
+                yield  # Report back to loadingscreen
+
                 print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
 
             print(f"Loaded chunks in {load_timer.stop()} seconds")
@@ -150,10 +153,14 @@ class World:
             for n in range(-31, 31):
                 self._whole_world[n] = HorizontalChunk(n * 16, n)
 
+            yield  # Report back to loadingscreen
+
             world = gen_world(-496, 496, 0, 320)
             for k, chunk_data in world.items():
                 n = int(k[1] / 16)
                 self._whole_world[n]['setter'] = chunk_data
+
+            yield  # Report back to loadingscreen
 
             print(f"Generated world in {timer.stop()} seconds")
 
@@ -163,6 +170,7 @@ class World:
                 with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
                     pickle.dump(chunk.data, f)
                     chunk.make_sprite_list()
+                yield  # Report back to loadingscreen
 
             print(f"Saved wold in {timer.stop()} seconds")
 
