@@ -33,7 +33,7 @@ class Game(arcade.View):
             self.bg_music.play(loop=True)
 
     def setup(self):
-        self.world.create()
+        yield from self.world.create()
 
     def on_draw(self) -> None:
         self.window.clear()
@@ -102,23 +102,51 @@ class QuitButton(arcade.gui.UIFlatButton):
 
 
 class LoadingScreen(arcade.View):
-    def __init__(self, game_view):
+    def __init__(self):
         super().__init__()
-        self.first_time = True
-        self.game_view = game_view
-        self.game_view.setup()
+        self.frames = 0
         self.text = "Loading World"
+        self.game_view = None
+        self.game_loader_generator = None
+        self.angle = 0
+        self.frame = 0
 
     def on_show(self):
         arcade.set_background_color(color.BLACK)
 
     def on_draw(self):
-        arcade.start_render()
-        if not self.first_time:
-            self.window.show_view(self.game_view)
-        else:
-            self.first_time = False
-        arcade.draw_text(self.text, config.SCREEN_WIDTH / 2 - 50, config.SCREEN_HEIGHT / 2, color=color.WHITE)
+        self.window.clear()
+        # On frame 0 we render the loading screen so this happens instantly
+        # On frame 1 we crate the game object and the loading iterator
+        # From frame 2 we invoke loading loading steps until done 
+        if self.frame == 1:
+            self.game_view = Game()
+            self.game_loader_generator = self.game_view.setup()
+        elif self.frame > 1:
+            try:
+                # Trigger next loading step
+                next(self.game_loader_generator)
+                self.angle += 10
+            except StopIteration:
+                # Loading is done. Show the game view (Will happen in next frame)
+                self.window.show_view(self.game_view)
+
+        arcade.draw_text(
+            self.text,
+            self.window.width / 2,
+            self.window.height / 2 + 30,
+            color=color.WHITE,
+            anchor_x="center",
+        )
+        arcade.draw_rectangle_filled(
+            self.window.width / 2,  # x
+            self.window.height / 2 - 30,  # y
+            50,
+            50,
+            arcade.color.WHITE,
+            self.angle,
+        )
+        self.frame += 1
 
 
 class StartView(arcade.View):
@@ -173,9 +201,7 @@ class StartView(arcade.View):
         )
 
     def on_click_start(self, event):
-        game_view = Game()
-        loading_screen = LoadingScreen(game_view)
-        self.window.show_view(loading_screen)
+        self.window.show_view(LoadingScreen())
 
     def on_draw(self):
         self.window.clear()
