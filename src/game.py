@@ -39,9 +39,11 @@ class Game(arcade.View):
         self.window.clear()
 
         self.world.draw()
+        arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, color.RED, 1)
 
         self.hud_camera.use()
         self.world.player.inventory.draw()
+
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
@@ -64,6 +66,12 @@ class Game(arcade.View):
 
         # TODO: This part needs work
         chunk = self.world._whole_world.get(self.world._player_sprite.chunk)
+
+        print(tmp_x, tmp_y, self.world.player.center_x, self.world.player.center_y)
+        self.bx = tmp_x
+        self.by = tmp_y
+        print(chunk.index)
+
         if not chunk:
             return
         block, block_dist = arcade.get_closest_sprite(

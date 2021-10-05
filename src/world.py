@@ -99,17 +99,27 @@ class World:
 
         # Fill visible chunks from left side
         while self._active_chunks[0].is_visible(player_x, view_dist):
-            new_chunk = self._whole_world.get(self._active_chunks[0].index - 1)
-            if not new_chunk or not new_chunk.is_visible(player_x, view_dist):
+            index = self._active_chunks[0].index - 1
+            new_chunk = self._whole_world.get(index)
+            if not new_chunk:
+                self._chunk_loader(index)
+                new_chunk = self._whole_world[index]
+            elif not new_chunk.is_visible(player_x, view_dist):
                 break
+
             self._active_chunks.appendleft(new_chunk)
             changed = True
 
         # Fill visible chunks from right side
         while self._active_chunks[-1].is_visible(player_x, view_dist):
-            new_chunk = self._whole_world.get(self._active_chunks[-1].index + 1)
-            if not new_chunk or not new_chunk.is_visible(player_x, view_dist):
+            index = self._active_chunks[-1].index + 1
+            new_chunk = self._whole_world.get(index)
+            if not new_chunk:
+                self._chunk_loader(index)
+                new_chunk = self._whole_world[index]
+            elif not new_chunk.is_visible(player_x, view_dist):
                 break
+
             self._active_chunks.append(new_chunk)
             changed = True
 
@@ -133,12 +143,8 @@ class World:
             print("Attempting to load existing chunks")
             load_timer = Timer("load_world")
 
-            for n in range(-31, 31):
-                chunk_timer = Timer("chunk_load")
-                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle") as f:
-                    chunk = HorizontalChunk(n * 16, n, pickle.load(f))
-                    chunk.make_sprite_list()
-                    self._whole_world[n] = chunk
+            for n in range(int(config.VISIBLE_RANGE_MIN/16), int(config.VISIBLE_RANGE_MAX/16) + 1):
+                chunk_timer = self._chunk_loader(n)
 
                 yield  # Report back to loadingscreen
 
@@ -191,3 +197,12 @@ class World:
                 config.CHUNK_HEIGHT_PIXELS,
                 arcade.color.RED,
             )
+
+    def _chunk_loader(self, n):
+        chunk_timer = Timer("chunk_load")
+        with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle") as f:
+            chunk = HorizontalChunk(n * 16, n, pickle.load(f))
+            chunk.make_sprite_list()
+            self._whole_world[n] = chunk
+        return chunk_timer
+

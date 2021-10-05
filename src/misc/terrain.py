@@ -144,7 +144,6 @@ def __gen_forest(y: int, y_max: int) -> npt.NDArray[np.int_]:
         for i in range(no_of_trees):
             biome[10:16, i + 2 + i * 3: i + 5 + i * 3] = __tree(tree_type)
 
-    biome = biome
     return biome
 
 
@@ -157,7 +156,6 @@ def __gen_plain(y: int, y_max: int) -> npt.NDArray[np.int_]:
     else:
         biome = np.full((16, 16), 128)
 
-    biome = biome
     return biome
 
 
@@ -176,7 +174,6 @@ def __gen_desert(y: int, y_max: int) -> npt.NDArray[np.int_]:
         for i in range(no_of_cactus):
             biome[13:16, 0 + i * 3: 1 + i * 3] = 153
 
-    biome = biome
     return biome
 
 
@@ -191,7 +188,6 @@ def __gen_volcanoes(y: int, y_max: int) -> npt.NDArray[np.int_]:
         volcano_w = choice((9, 11, 13))
         biome[16 - floor(volcano_w / 2) - 1:16, 2:2 + volcano_w] = __volcano(volcano_w)
 
-    biome = biome
     return biome
 
 
@@ -208,7 +204,6 @@ def __gen_jungles(y: int, y_max: int) -> npt.NDArray[np.int_]:
         for i in range(no_of_trees):
             biome[6:16, i + i * 5: i + 5 + i * 5] = __tree(jungle_tree_type, True)
 
-    biome = biome
     return biome
 
 
