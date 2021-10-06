@@ -1,6 +1,7 @@
 import gzip
 import pickle
 from collections import deque
+import time
 from typing import Tuple
 import threading
 from queue import Empty, Queue
@@ -57,6 +58,10 @@ class World:
 
         self.camera = CustomCamera(*self._screen_size)
 
+        # Chunk loader
+        self._chunk_loader = ChunkLoader()
+        self._requested_chunks = set()  # Keep track of requested chunks
+
     @property
     def player(self) -> Player:
         return self._player_sprite
@@ -74,7 +79,9 @@ class World:
     def update(self):
         """Called every frame to update the world state"""
         self.camera.center_camera_to_player(self._player_sprite)
-        self._update_visible_chunks()
+        self.update_visible_chunks()
+        self.process_new_chunks()
+
         if self._player_sprite.center_y < -100:
             self._player_sprite.set_position(self._player_default_x, self._player_default_y)
         self._physics_engine.update()
@@ -83,16 +90,37 @@ class World:
         """Create the initial world state"""
         yield from self.setup_world()
 
-    def _update_visible_chunks(self):
+    def process_new_chunks(self):
+        # Get loaded chunks from threaded chunk loader
+        new_chunks = self._chunk_loader.get_loaded_chunks(max_results=1)
+        for chunk in new_chunks:
+            print("New chunk data processed", type(chunk))
+            self._requested_chunks.remove(chunk.index)
+            self._whole_world[chunk.index] = chunk
+
+    def request_chunk(self, chunk_id: int):
+        """Request a new chunk"""
+        # Ensure we don't request the same chunk multiple times
+        if chunk_id in self._requested_chunks:
+            return
+
+        print("Requesting new chunk", chunk_id)
+        self._chunk_loader.queue_in.put(chunk_id)
+        self._requested_chunks.add(chunk_id)
+
+    def update_visible_chunks(self) -> Tuple[bool, bool]:
         """Detect and update visible chunks"""
-        changed = False
+        changed = False  # Did visible chunks change?
+        visible_loaded = True  # Are all visible chunks loaded?
 
         # If we have no active chunks, add the chunk the player is located in
         if not self._active_chunks:
             chunk = self._whole_world.get(self._player_sprite.chunk)
             # If the player is not located in a chunk we have nothing to do
             if not chunk:
-                return
+                self.request_chunk(self._player_sprite.chunk)
+                return False, False
+
             self._active_chunks.append(chunk)
             changed = True
 
@@ -104,8 +132,9 @@ class World:
             index = self._active_chunks[0].index - 1
             new_chunk = self._whole_world.get(index)
             if not new_chunk:
-                self._chunk_loader(index)
-                new_chunk = self._whole_world[index]
+                self.request_chunk(index)
+                visible_loaded = False
+                break
             elif not new_chunk.is_visible(player_x, view_dist):
                 break
 
@@ -117,8 +146,9 @@ class World:
             index = self._active_chunks[-1].index + 1
             new_chunk = self._whole_world.get(index)
             if not new_chunk:
-                self._chunk_loader(index)
-                new_chunk = self._whole_world[index]
+                self.request_chunk(index)
+                visible_loaded = False
+                break
             elif not new_chunk.is_visible(player_x, view_dist):
                 break
 
@@ -139,48 +169,41 @@ class World:
         if changed:
             self._physics_engine.platforms = [chunk.spritelist for chunk in self._active_chunks]
 
+        return visible_loaded, changed
+
     def setup_world(self) -> None:
         config.DATA_DIR.mkdir(exist_ok=True)
-        try:
-            print("Attempting to load existing chunks")
-            load_timer = Timer("load_world")
+        # try:
+        #     load_timer = Timer("load_world")
 
-            for n in range(int(config.VISIBLE_RANGE_MIN/16), int(config.VISIBLE_RANGE_MAX/16) + 1):
-                chunk_timer = self._chunk_loader(n)
+        #     for n in range(int(config.VISIBLE_RANGE_MIN / 16), int(config.VISIBLE_RANGE_MAX / 16) + 1):
+        #         chunk_timer = self._chunk_loader(n)
+        #         print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
 
-                yield  # Report back to loadingscreen
+        #     print(f"Loaded chunks in {load_timer.stop()} seconds")
+        # except FileNotFoundError:
+        #     print("Failed to load chunks. Generating world...")
+        #     timer = Timer("world_gen")
 
-                print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
+        #     # Create empty chunks
+        #     for n in range(-31, 31):
+        #         self._whole_world[n] = HorizontalChunk(n * 16, n)
 
-            print(f"Loaded chunks in {load_timer.stop()} seconds")
-        except FileNotFoundError:
-            print("Failed to load chunks. Generating world...")
-            timer = Timer("world_gen")
+        #     world = gen_world(-496, 496, 0, 320)
+        #     for k, chunk_data in world.items():
+        #         n = int(k[1] / 16)
+        #         self._whole_world[n]['setter'] = chunk_data
 
-            # Create empty chunks
-            for n in range(-31, 31):
-                self._whole_world[n] = HorizontalChunk(n * 16, n)
+        #     print(f"Generated world in {timer.stop()} seconds")
 
-            yield  # Report back to loadingscreen
+        #     print("Saving world")
+        #     timer = Timer("world_save")
+        #     for n, chunk in self._whole_world.items():
+        #         with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+        #             pickle.dump(chunk.data, f)
+        #             chunk.make_sprite_list()
 
-            world = gen_world(-496, 496, 0, 320)
-            for k, chunk_data in world.items():
-                n = int(k[1] / 16)
-                self._whole_world[n]['setter'] = chunk_data
-
-            yield  # Report back to loadingscreen
-
-            print(f"Generated world in {timer.stop()} seconds")
-
-            print("Saving world")
-            timer = Timer("world_save")
-            for n, chunk in self._whole_world.items():
-                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
-                    pickle.dump(chunk.data, f)
-                    chunk.make_sprite_list()
-                yield  # Report back to loadingscreen
-
-            print(f"Saved wold in {timer.stop()} seconds")
+        #     print(f"Saved wold in {timer.stop()} seconds")
 
     def debug_draw_chunks(self):
         """Draw chunk borders with lines"""
@@ -200,19 +223,9 @@ class World:
                 arcade.color.RED,
             )
 
-    def _chunk_loader(self, n):
-        chunk_timer = Timer("chunk_load")
-        with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle") as f:
-            chunk = HorizontalChunk(n * 16, n, pickle.load(f))
-            chunk.make_sprite_list()
-            self._whole_world[n] = chunk
-        return chunk_timer
-
 
 class ChunkLoader:
-    def __init__(self, parent):
-        self.parent = parent
-
+    def __init__(self):
         # Queue for incoming and completed work
         self.queue_in = Queue(maxsize=-1)
         self.queue_out = Queue(maxsize=-1)
@@ -224,17 +237,34 @@ class ChunkLoader:
     def run(self):
         while True:
             # Wait for a new chunk loading request
-            item = self.queue_in.get(block=True)
-            print("Chunkloader: Got chunk to load:", item)
+            chunk_id = self.queue_in.get(block=True)
             # Load the chunk here..
-            # Send the chunk back
-            self.queue_out.put(f"Chunk {item}")
+            chunk_timer = Timer("chunk_load")
+            with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{chunk_id}.pickle") as f:
+                chunk = HorizontalChunk(chunk_id * 16, chunk_id, pickle.load(f))
+            print("Loaded chunk in", chunk_timer.stop())
 
-    def get_loaded_chunks(self):
+            # Spread load over more time
+            sp_timer = Timer("chunk_load")
+            i = 0
+            for _ in chunk.make_sprite_list():
+                if i == 50:
+                    time.sleep(0.001)
+                    i = 0
+                i += 1
+            print("Make spritelist in", sp_timer.stop())
+
+            self.queue_out.put(chunk)
+
+            print(f"Loaded chunk {chunk_id} in {chunk_timer.stop()}")
+
+    def get_loaded_chunks(self, max_results=1):
         chunks = deque()
-        while True:
+        # Attempt to fetch max_results chunks from the queue
+        for _ in range(max_results):
             try:
-                chunks.append(self.queue_out.get(block=False))
+                chunk = self.queue_out.get(block=False)
+                chunks.append(chunk)
             except Empty:
                 break
 

@@ -20,6 +20,9 @@ class Game(arcade.View):
         self.hud_camera = arcade.Camera(*self.window.get_size())
         self.world = World(screen_size=self.window.get_size(), name="default")
 
+        self.bx = 0
+        self.by = 0
+
         # TODO: Is this necessary?
         self.world.player.inventory.setup_coords((0, 0))
 
@@ -43,8 +46,10 @@ class Game(arcade.View):
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
+        # print(delta_time)
         self.world.update()
         self.world.player.inventory.update()
+        self.window.ctx.gc()
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when keyboard is pressed"""
@@ -110,8 +115,7 @@ class LoadingScreen(arcade.View):
         super().__init__()
         self.frames = 0
         self.text = "Loading World"
-        self.game_view = None
-        self.game_loader_generator = None
+        self.game_view = Game()
         self.angle = 0
         self.frame = 0
 
@@ -127,13 +131,16 @@ class LoadingScreen(arcade.View):
             self.game_view = Game()
             self.game_loader_generator = self.game_view.setup()
         elif self.frame > 1:
-            try:
-                # Trigger next loading step
-                next(self.game_loader_generator)
-                self.angle += 10
-            except StopIteration:
+            # Run until all visible chunks are loaded
+            self.game_view.world.process_new_chunks()
+            visible_loaded, changed = self.game_view.world.update_visible_chunks()
+            # print(visible_loaded, changed)
+            if visible_loaded:
                 # Loading is done. Show the game view (Will happen in next frame)
                 self.window.show_view(self.game_view)
+
+            # Trigger next loading step
+            self.angle += 5
 
         arcade.draw_text(
             self.text,
@@ -241,7 +248,7 @@ class StartView(arcade.View):
 
 def main():
     """ Main method """
-    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE)
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc")
     window.show_view(StartView())
     arcade.run()
 
