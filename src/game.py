@@ -121,6 +121,7 @@ class LoadingScreen(arcade.View):
         self.game_view = Game()
         self.angle = 0
         self.frame = 0
+        self.done_loading = False
 
     def on_show(self):
         arcade.set_background_color(color.BLACK)
@@ -130,17 +131,10 @@ class LoadingScreen(arcade.View):
         # On frame 0 we render the loading screen so this happens instantly
         # On frame 1 we crate the game object and the loading iterator
         # From frame 2 we invoke loading loading steps until done 
-        if self.frame == 1:
-            self.game_view = Game()
-            self.game_loader_generator = self.game_view.setup()
-        elif self.frame > 1:
+        if self.frame > 1:
             # Run until all visible chunks are loaded
             self.game_view.world.process_new_chunks()
-            visible_loaded, changed = self.game_view.world.update_visible_chunks()
-            # print(visible_loaded, changed)
-            if visible_loaded:
-                # Loading is done. Show the game view (Will happen in next frame)
-                self.window.show_view(self.game_view)
+            self.done_loading, _ = self.game_view.world.update_visible_chunks()
 
             # Trigger next loading step
             self.angle += 5
@@ -160,6 +154,15 @@ class LoadingScreen(arcade.View):
             arcade.color.WHITE,
             self.angle,
         )
+
+    def on_update(self, delta_time: float):
+        if self.frame == 1:
+            self.game_view = Game()
+
+        # Loading is done. Show the game view (Will happen in next frame)
+        if self.done_loading:
+            self.window.show_view(self.game_view)
+
         self.frame += 1
 
 
@@ -244,7 +247,7 @@ class StartView(arcade.View):
 
         self.manager.draw()
 
-    def on_view_hide(self):
+    def on_hide_view(self):
         """Disable the UI events"""
         self.manager.disable()
 
