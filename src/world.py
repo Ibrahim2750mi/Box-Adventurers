@@ -92,6 +92,7 @@ class World:
 
     def process_new_chunks(self):
         # Get loaded chunks from threaded chunk loader
+        self._chunk_loader.start()
         new_chunks = self._chunk_loader.get_loaded_chunks(max_results=1)
         for chunk in new_chunks:
             print("New chunk data processed", type(chunk))
@@ -231,10 +232,15 @@ class ChunkLoader:
         self.queue_out = Queue(maxsize=-1)
 
         # Run as daemon thread. This will terminate with the application.
-        self.thread = threading.Thread(target=self.run, daemon=True)
-        self.thread.start()
+        self.thread = threading.Thread(target=self._run, daemon=True)
 
-    def run(self):
+    def start(self):
+        """Start the thread if not already started"""
+        if not self.thread.is_alive():
+            print("Starting chunk loader thread")
+            self.thread.start()
+
+    def _run(self):
         while True:
             # Wait for a new chunk loading request
             chunk_id = self.queue_in.get(block=True)
