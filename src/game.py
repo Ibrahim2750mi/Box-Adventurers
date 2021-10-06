@@ -43,13 +43,16 @@ class Game(arcade.View):
         self.hud_camera.use()
         self.world.player.inventory.draw()
 
-
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
         # print(delta_time)
         self.world.update()
         self.world.player.inventory.update()
         self.window.ctx.gc()
+
+    def on_resize(self, width, height):
+        self.hud_camera.resize(width, height)
+        self.world.camera.resize(width, height)
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when keyboard is pressed"""
@@ -248,7 +251,7 @@ class StartView(arcade.View):
 
 def main():
     """ Main method """
-    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc")
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc", resizable=True)
     window.show_view(StartView())
     arcade.run()
 
