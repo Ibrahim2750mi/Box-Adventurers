@@ -12,6 +12,7 @@ BLOCK_TEXTURES = {
     block_id: arcade.load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png") for block_id in range(128, 156)
 }
 
+
 class Block(arcade.Sprite):
     def __init__(
         self,
@@ -34,6 +35,7 @@ class Block(arcade.Sprite):
             center_y=center_y,
             image_width=width,
             image_height=height,
+            hit_box_algorithm="None",
             *args,
             **kwargs
         )
@@ -42,17 +44,15 @@ class Block(arcade.Sprite):
         self.block_id = block_id
         self.width = width
         self.height = height
-        self.x = self.center_x
-        self.y = self.center_y
-        self.hp = hp
+        # self.hp = hp
         # self.break_mask = BreakMask()
-        self.ORIGINAL_IMAGE = self.texture.image
-        self.bright = bright
-        self.breaking_time = breaking_time
-        self.break_time_left = breaking_time
-        self.break_textures = BREAK_TEXTURES
-        self.anim_pos = 0
-        self.orig_texture = self._texture
+        # self.ORIGINAL_IMAGE = self.texture.image
+        # self.bright = bright
+        # self.breaking_time = breaking_time
+        # self.break_time_left = breaking_time
+        # self.break_textures = BREAK_TEXTURES
+        # self.anim_pos = 0
+        # self.orig_texture = self._texture
 
     def hp_set(self, val):
         if val <= 0:
@@ -88,3 +88,21 @@ class Block(arcade.Sprite):
 
     # def break_(self, block_id) -> None:
     #     self.texture = load_texture(config.ASSET_DIR / "sprites" / f"{block_id}.png")
+
+    # Optimization experiment
+    # def _get_left(self):
+    #     return self.center_x - self.width / 2
+    
+    # def _get_right(self):
+    #     return self.center_x + self.width / 2
+
+    # def _get_top(self):
+    #     return self.center_y + self.height / 2
+
+    # def _get_bottom(self):
+    #     return self.center_y - self.height / 2
+
+    # left = property(_get_left, None)
+    # right = property(_get_right, None)
+    # top = property(_get_top, None)
+    # bottom = property(_get_bottom, None)

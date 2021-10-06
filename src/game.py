@@ -1,11 +1,7 @@
-import math
-from typing import Tuple
-
 import arcade
 import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
-from block.block import Block
 from misc.item import Item
 from world import World
 import config

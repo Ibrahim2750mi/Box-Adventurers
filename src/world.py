@@ -2,6 +2,8 @@ import gzip
 import pickle
 from collections import deque
 from typing import Tuple
+import threading
+from queue import Empty, Queue
 
 import arcade
 from entities.player import Player
@@ -206,3 +208,34 @@ class World:
             self._whole_world[n] = chunk
         return chunk_timer
 
+
+class ChunkLoader:
+    def __init__(self, parent):
+        self.parent = parent
+
+        # Queue for incoming and completed work
+        self.queue_in = Queue(maxsize=-1)
+        self.queue_out = Queue(maxsize=-1)
+
+        # Run as daemon thread. This will terminate with the application.
+        self.thread = threading.Thread(target=self.run, daemon=True)
+        self.thread.start()
+
+    def run(self):
+        while True:
+            # Wait for a new chunk loading request
+            item = self.queue_in.get(block=True)
+            print("Chunkloader: Got chunk to load:", item)
+            # Load the chunk here..
+            # Send the chunk back
+            self.queue_out.put(f"Chunk {item}")
+
+    def get_loaded_chunks(self):
+        chunks = deque()
+        while True:
+            try:
+                chunks.append(self.queue_out.get(block=False))
+            except Empty:
+                break
+
+        return chunks
