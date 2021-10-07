@@ -1,11 +1,7 @@
-import math
-from typing import Tuple
-
 import arcade
 import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
-from block.block import Block
 from misc.item import Item
 from world import World
 import config
@@ -23,6 +19,9 @@ class Game(arcade.View):
         self.place_cooldown = False
         self.hud_camera = arcade.Camera(*self.window.get_size())
         self.world = World(screen_size=self.window.get_size(), name="default")
+
+        self.bx = 0
+        self.by = 0
 
         # TODO: Is this necessary?
         self.world.player.inventory.setup_coords((0, 0))
@@ -44,11 +43,16 @@ class Game(arcade.View):
         self.hud_camera.use()
         self.world.player.inventory.draw()
 
-
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
+        # print(delta_time)
         self.world.update()
         self.world.player.inventory.update()
+        self.window.ctx.gc()
+
+    def on_resize(self, width, height):
+        self.hud_camera.resize(width, height)
+        self.world.camera.resize(width, height)
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when keyboard is pressed"""
@@ -114,10 +118,10 @@ class LoadingScreen(arcade.View):
         super().__init__()
         self.frames = 0
         self.text = "Loading World"
-        self.game_view = None
-        self.game_loader_generator = None
+        self.game_view = Game()
         self.angle = 0
         self.frame = 0
+        self.done_loading = False
 
     def on_show(self):
         arcade.set_background_color(color.BLACK)
@@ -127,17 +131,13 @@ class LoadingScreen(arcade.View):
         # On frame 0 we render the loading screen so this happens instantly
         # On frame 1 we crate the game object and the loading iterator
         # From frame 2 we invoke loading loading steps until done 
-        if self.frame == 1:
-            self.game_view = Game()
-            self.game_loader_generator = self.game_view.setup()
-        elif self.frame > 1:
-            try:
-                # Trigger next loading step
-                next(self.game_loader_generator)
-                self.angle += 10
-            except StopIteration:
-                # Loading is done. Show the game view (Will happen in next frame)
-                self.window.show_view(self.game_view)
+        if self.frame > 1:
+            # Run until all visible chunks are loaded
+            self.game_view.world.process_new_chunks()
+            self.done_loading, _ = self.game_view.world.update_visible_chunks()
+
+            # Trigger next loading step
+            self.angle += 5
 
         arcade.draw_text(
             self.text,
@@ -154,6 +154,15 @@ class LoadingScreen(arcade.View):
             arcade.color.WHITE,
             self.angle,
         )
+
+    def on_update(self, delta_time: float):
+        if self.frame == 1:
+            self.game_view = Game()
+
+        # Loading is done. Show the game view (Will happen in next frame)
+        if self.done_loading:
+            self.window.show_view(self.game_view)
+
         self.frame += 1
 
 
@@ -238,14 +247,14 @@ class StartView(arcade.View):
 
         self.manager.draw()
 
-    def on_view_hide(self):
+    def on_hide_view(self):
         """Disable the UI events"""
         self.manager.disable()
 
 
 def main():
     """ Main method """
-    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE)
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc", resizable=True)
     window.show_view(StartView())
     arcade.run()
 

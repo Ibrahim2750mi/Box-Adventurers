@@ -22,8 +22,8 @@ class HorizontalChunk:
         self._y = 0
         self._chunks = 0
 
-        self._blocks = arcade.SpriteList(use_spatial_hash=True)
-        self._bg_blocks = arcade.SpriteList(use_spatial_hash=True)
+        self._blocks = arcade.SpriteList(use_spatial_hash=True, lazy=True)
+        self._bg_blocks = arcade.SpriteList(use_spatial_hash=True, lazy=True)
 
         self.bg_block_count = 0
         self.other_block_count = 0
@@ -76,6 +76,8 @@ class HorizontalChunk:
                 self._blocks.append(block)
             else:
                 self._bg_blocks.append(block)
+
+            yield
 
     def __getitem__(self, key: int):
         return self.data[key]
