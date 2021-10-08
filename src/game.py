@@ -35,7 +35,7 @@ class Game(arcade.View):
         self.by = self.world.player.center_y
 
     def setup(self):
-        yield from self.world.create()
+        self.world.create()
 
     def on_draw(self) -> None:
         self.window.clear()
@@ -130,7 +130,7 @@ class LoadingScreen(arcade.View):
         super().__init__()
         self.frames = 0
         self.text = "Loading World"
-        self.game_view = Game()
+        self.game_view = None
         self.angle = 0
         self.frame = 0
         self.done_loading = False
@@ -170,6 +170,7 @@ class LoadingScreen(arcade.View):
     def on_update(self, delta_time: float):
         if self.frame == 1:
             self.game_view = Game()
+            self.game_view.setup()
 
         # Loading is done. Show the game view (Will happen in next frame)
         if self.done_loading:
