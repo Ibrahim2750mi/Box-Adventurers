@@ -31,6 +31,9 @@ class Game(arcade.View):
             self.bg_music = arcade.Sound(config.ASSET_DIR / "music" / "main_game_tune.wav")
             self.bg_music.play(loop=True)
 
+        self.bx = self.world.player.center_x
+        self.by = self.world.player.center_y
+
     def setup(self):
         yield from self.world.create()
 
@@ -42,6 +45,7 @@ class Game(arcade.View):
 
         self.hud_camera.use()
         self.world.player.inventory.draw()
+        arcade.draw_rectangle_outline(self.bx, self.by, 30, 30, color=color.RED)
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
@@ -62,12 +66,17 @@ class Game(arcade.View):
         """Called when keyboard is released"""
         self.world.player.on_key_release(key, modifiers)
 
+    def on_mouse_motion(self, x, y, dx, dy):
+        tmp_x = x + self.world.camera.position[0]
+        tmp_y = y + self.world.camera.position[1]
+        self.bx = tmp_x
+        self.by = tmp_y
+
     def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
         player = self.world.player
-        tmp_x = x - 600 + player.x
-        tmp_y = y - 347 + player.y
+        tmp_x = x + self.world.camera.position[0]
+        tmp_y = y + self.world.camera.position[1]
         # distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
-
         # TODO: This part needs work
         chunk = self.world._whole_world.get(self.world._player_sprite.chunk)
 
@@ -78,16 +87,19 @@ class Game(arcade.View):
 
         if not chunk:
             return
-        block, block_dist = arcade.get_closest_sprite(
-            arcade.Sprite(
-                config.ASSET_DIR / "sprites" / "mouse_point.png",
-                image_width=2,
-                image_height=2,
-                center_x=tmp_x,
-                center_y=tmp_y
-            ),
-            chunk.spritelist,
-        )
+        try:
+            block, block_dist = arcade.check_for_collision_with_list(
+                arcade.Sprite(
+                    config.ASSET_DIR / "sprites" / "mouse_point.png",
+                    image_width=2,
+                    image_height=2,
+                    center_x=tmp_x,
+                    center_y=tmp_y
+                ),
+                chunk.spritelist,
+            )
+        except ValueError:
+            return
 
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
