@@ -88,7 +88,7 @@ class World:
 
     def create(self):
         """Create the initial world state"""
-        yield from self.setup_world()
+        self.setup_world()
 
     def process_new_chunks(self):
         # Get loaded chunks from threaded chunk loader
@@ -174,37 +174,30 @@ class World:
 
     def setup_world(self) -> None:
         config.DATA_DIR.mkdir(exist_ok=True)
-        # try:
-        #     load_timer = Timer("load_world")
 
-        #     for n in range(int(config.VISIBLE_RANGE_MIN / 16), int(config.VISIBLE_RANGE_MAX / 16) + 1):
-        #         chunk_timer = self._chunk_loader(n)
-        #         print(f"Loaded chunk {n} in {chunk_timer.stop()} seconds")
+        if not (config.DATA_DIR / f"pickle{pickle.format_version}_0.pickle").exists():
+            print("World not generated. Generating world...")
+            timer = Timer("world_gen")
 
-        #     print(f"Loaded chunks in {load_timer.stop()} seconds")
-        # except FileNotFoundError:
-        #     print("Failed to load chunks. Generating world...")
-        #     timer = Timer("world_gen")
+            # Create empty chunks
+            for n in range(-31, 31):
+                self._whole_world[n] = HorizontalChunk(n * 16, n)
 
-        #     # Create empty chunks
-        #     for n in range(-31, 31):
-        #         self._whole_world[n] = HorizontalChunk(n * 16, n)
+            world = gen_world(-496, 496, 0, 320)
+            for k, chunk_data in world.items():
+                n = int(k[1] / 16)
+                self._whole_world[n]['setter'] = chunk_data
 
-        #     world = gen_world(-496, 496, 0, 320)
-        #     for k, chunk_data in world.items():
-        #         n = int(k[1] / 16)
-        #         self._whole_world[n]['setter'] = chunk_data
+            print(f"Generated world in {timer.stop()} seconds")
 
-        #     print(f"Generated world in {timer.stop()} seconds")
+            print("Saving world")
+            timer = Timer("world_save")
+            for n, chunk in self._whole_world.items():
+                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
+                    pickle.dump(chunk.data, f)
+                    chunk.make_sprite_list()
 
-        #     print("Saving world")
-        #     timer = Timer("world_save")
-        #     for n, chunk in self._whole_world.items():
-        #         with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
-        #             pickle.dump(chunk.data, f)
-        #             chunk.make_sprite_list()
-
-        #     print(f"Saved wold in {timer.stop()} seconds")
+            print(f"Saved wold in {timer.stop()} seconds")
 
     def debug_draw_chunks(self):
         """Draw chunk borders with lines"""
