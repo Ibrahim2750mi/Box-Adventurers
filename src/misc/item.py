@@ -2,6 +2,7 @@ from arcade import Sprite, draw_text
 from arcade.csscolor import WHITE
 import config
 
+
 class Item(Sprite):
 
     def __init__(self, stackable: bool, block_id: int, *args, **kwargs):
@@ -22,5 +23,5 @@ class Item(Sprite):
         self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
         self.center_y = cen_y - (inv_height / 2) + 2 + 29
 
-        draw_text(str(slot), self.center_x - 20, self.center_y - 20, WHITE, 18)
-        draw_text(str(self.amount), self.center_x + 10, self.center_y - 20, WHITE, 10)
+        # draw_text("20", self.center_x - 20, self.center_y - 20, WHITE, 18)
+        draw_text(str(self.amount), self.center_x + 10, self.center_y - 20, WHITE, 20, width=40)

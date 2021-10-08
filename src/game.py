@@ -1,3 +1,5 @@
+import math
+
 import arcade
 import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
@@ -74,38 +76,33 @@ class Game(arcade.View):
 
     def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
         player = self.world.player
+
         tmp_x = x + self.world.camera.position[0]
         tmp_y = y + self.world.camera.position[1]
-        # distance = math.sqrt((tmp_x - player.x) ** 2 + (tmp_y - player.y) ** 2)
-        # TODO: This part needs work
-        chunk = self.world._whole_world.get(self.world._player_sprite.chunk)
 
-        print(tmp_x, tmp_y, self.world.player.center_x, self.world.player.center_y)
+        block = None
+        block_dist = math.sqrt((player.center_x - tmp_x)**2 + (player.center_y - tmp_y)**2)
+
+        # TODO: This part needs work
+        chunk = self.world.whole_world.get(tmp_x // 320)
+
         self.bx = tmp_x
         self.by = tmp_y
-        print(chunk.index)
 
         if not chunk:
             return
-        try:
-            block, block_dist = arcade.check_for_collision_with_list(
-                arcade.Sprite(
-                    config.ASSET_DIR / "sprites" / "mouse_point.png",
-                    image_width=2,
-                    image_height=2,
-                    center_x=tmp_x,
-                    center_y=tmp_y
-                ),
-                chunk.spritelist,
-            )
-        except ValueError:
-            return
+        for sprite in chunk.spritelist:
+            if tmp_x + 10 >= sprite.center_x >= tmp_x - 10 and tmp_y + 10 >= sprite.center_y >= tmp_y - 10:
+                block = sprite
+                print(block.center_x, tmp_x, block.center_y, tmp_y)
 
+        if not block:
+            return
         if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
             # if block is within range and is not sky then break it
             if block_dist <= 100:
                 self.world.player.inventory.add(Item(True, block.block_id))
-                block.remove_from_sprite_lists()
+                chunk.remove(block)
 
         # elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
         #     distance <= 100 and block[0].block_id <= 129 and self.place_block)
@@ -230,7 +227,7 @@ class StartView(arcade.View):
                 child=self.v_box)
         )
 
-    def on_click_start(self, event):
+    def on_click_start(self, _):
         self.window.show_view(LoadingScreen())
 
     def on_draw(self):
@@ -267,7 +264,8 @@ class StartView(arcade.View):
 
 def main():
     """ Main method """
-    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc", resizable=True)
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc",
+                           resizable=True)
     window.show_view(StartView())
     arcade.run()
 

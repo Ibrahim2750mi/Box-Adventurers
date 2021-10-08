@@ -102,3 +102,15 @@ class HorizontalChunk:
     def draw(self):
         self._blocks.draw(pixelated=True)
         self._bg_blocks.draw(pixelated=True)
+
+    def remove(self, block: Block):
+        block.remove_from_sprite_lists()
+        new_block = Block(width=config.SPRITE_PIXEL_SIZE,
+                          height=config.SPRITE_PIXEL_SIZE,
+                          breaking_time=2,
+                          hp=2,
+                          block_id=128,
+                          bright=False,
+                          center_x=block.center_x,
+                          center_y=block.center_y)
+        self._bg_blocks.append(new_block)

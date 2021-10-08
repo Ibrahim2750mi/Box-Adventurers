@@ -217,6 +217,10 @@ class World:
                 arcade.color.RED,
             )
 
+    @property
+    def whole_world(self):
+        return self._whole_world
+
 
 class ChunkLoader:
     def __init__(self):

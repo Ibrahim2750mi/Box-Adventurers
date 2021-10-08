@@ -6,6 +6,7 @@ from pyglet.math import Vec2
 from misc.item import Item
 import config
 
+
 class InventoryFullError(Exception):
     def __init__(self) -> None:
         super().__init__("Inventory is full.")
@@ -24,6 +25,7 @@ class Inventory(Sprite):
         self.filled_slots = 0
 
     def add(self, item: Item) -> None:
+        print(self.slots)
         if self.filled_slots == self.max_slots:
             raise InventoryFullError
         added = False
@@ -32,11 +34,13 @@ class Inventory(Sprite):
                 slot_item = self.slots[i]
                 if slot_item is not None and slot_item.block_id == item.block_id:
                     added = True
+                    print(slot_item.amount)
                     if slot_item.amount == config.MAX_STACK:
                         self.slots[self.get_free_slot()] = item
                         self.filled_slots += 1
                     else:
                         slot_item.amount += 1
+                        slot_item.draw(i, self.center_x, self.center_y, self.width, self.height)
                     break
         if not added:
             self.slots[self.get_free_slot()] = item
@@ -52,11 +56,8 @@ class Inventory(Sprite):
                 return slot
         raise InventoryFullError
 
-    def draw(self) -> None:
+    def draw(self, *, filter=None, pixelated=None, blend_function=None):
         super().draw(pixelated=True)
-        for slot, item in self.slots.items():
-            if item is not None:
-                item.draw(slot, self.center_x, self.center_y, self.width, self.height)
 
     def remove(self, item: Item) -> None:
         for i in range(len(self.slots), 0, -1):
