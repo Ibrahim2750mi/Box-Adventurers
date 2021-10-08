@@ -45,8 +45,8 @@ class World:
 
         # Initial physics engine with no chunks
         self._physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(
-            self._player_sprite,
-            [],
+            player_sprite=self._player_sprite,
+            walls=[],
             gravity_constant=config.GRAVITY,
         )
         self._player_sprite.physics_engine = self._physics_engine
@@ -168,7 +168,7 @@ class World:
 
         # Update chunks for the physics engine
         if changed:
-            self._physics_engine.platforms = [chunk.spritelist for chunk in self._active_chunks]
+            self._physics_engine.walls = [chunk.spritelist for chunk in self._active_chunks]
 
         return visible_loaded, changed
 
