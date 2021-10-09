@@ -2,12 +2,13 @@ import gzip
 import pickle
 from collections import deque
 import time
-from typing import Tuple
+from typing import Optional, Tuple, Set
 import threading
 from queue import Empty, Queue
 
 import arcade
 from entities.player import Player
+from block.block import Block
 from misc.camera import CustomCamera
 from misc.terrain import gen_world
 from utils import Timer
@@ -60,7 +61,7 @@ class World:
 
         # Chunk loader
         self._chunk_loader = ChunkLoader()
-        self._requested_chunks = set()  # Keep track of requested chunks
+        self._requested_chunks: Set[int] = set()  # Keep track of requested chunks
 
     @property
     def player(self) -> Player:
@@ -176,7 +177,7 @@ class World:
         config.DATA_DIR.mkdir(exist_ok=True)
 
         if not (config.DATA_DIR / f"pickle{pickle.format_version}_0.pickle").exists():
-            print("World not generated. Generating world...")
+            print("World not generated. Generating ...")
             timer = Timer("world_gen")
 
             # Create empty chunks
@@ -193,8 +194,8 @@ class World:
             print("Saving world")
             timer = Timer("world_save")
             for n, chunk in self._whole_world.items():
-                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as f:
-                    pickle.dump(chunk.data, f)
+                with gzip.open(config.DATA_DIR / f"pickle{pickle.format_version}_{n}.pickle", "wb") as fd:
+                    pickle.dump(chunk.data, fd)
                     chunk.make_sprite_list()
 
             print(f"Saved wold in {timer.stop()} seconds")
@@ -216,6 +217,22 @@ class World:
                 config.CHUNK_HEIGHT_PIXELS,
                 arcade.color.RED,
             )
+
+    def get_chunk_at_world_position(self, x, y) -> Optional[HorizontalChunk]:
+        """Get a chunk at a wold position"""
+        return self._whole_world.get((x + config.SPRITE_PIXEL_SIZE / 2) // 320)
+
+    def get_block_at_world_position(self, x, y) -> Optional[Block]:
+        """Get a block from a world position"""
+        chunk = self.get_chunk_at_world_position(x, y)
+        if not chunk:
+            return None
+
+        blocks = arcade.get_sprites_at_point(point=(x, y), sprite_list=chunk.spritelist)
+        if blocks:
+            return blocks[0]
+
+        return None
 
     @property
     def whole_world(self):
