@@ -104,15 +104,15 @@ class Player(Entity):
         :param can_jump: If the player on the ground.
         :type can_jump: bool
         """
-        if key_pressed == key.UP:
+        if key_pressed in (key.UP, key.W):
             if self.physics_engine.can_jump():
                 self.change_y = self.jump_speed
-        elif key_pressed == key.LEFT:
+        elif key_pressed in (key.LEFT, key.A):
             self.change_x = -self.movement_speed
             self.direction = Direction.LEFT
             self.last_faced_dir = "left"
             self.texture = self.textures[Direction.LEFT.value]
-        elif key_pressed == key.RIGHT:
+        elif key_pressed in (key.RIGHT, key.D):
             self.change_x = self.movement_speed
             self.direction = Direction.RIGHT
             self.last_faced_dir = "right"
@@ -126,6 +126,6 @@ class Player(Entity):
         :param modifiers: Modifiers that were released with the key.
         :type modifiers: int
         """
-        if key_released in (key.LEFT, key.RIGHT):
+        if key_released in (key.LEFT, key.RIGHT, key.A, key.D):
             self.change_x = 0
             self.direction = None
