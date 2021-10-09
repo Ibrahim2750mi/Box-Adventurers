@@ -1,3 +1,4 @@
+import math
 from enum import Enum
 from typing import Optional
 
@@ -16,17 +17,17 @@ class Direction(Enum):
 class Player(Entity):
 
     def __init__(
-            self,
-            image_file: str,
-            scale: float,
-            center_x: float,
-            center_y: float,
-            screen_width: int,
-            screen_height: int,
-            movement_speed: float,
-            jump_speed: float,
-            flipped_horizontally: bool,
-        ) -> None:
+        self,
+        image_file: str,
+        scale: float,
+        center_x: float,
+        center_y: float,
+        screen_width: int,
+        screen_height: int,
+        movement_speed: float,
+        jump_speed: float,
+        flipped_horizontally: bool,
+    ) -> None:
         """Initialize the Player.
 
         :param image_file: Path to the image file.
@@ -82,6 +83,17 @@ class Player(Entity):
     def y(self) -> float:
         return self.center_y
 
+    @property
+    def chunk(self):
+        """The chunk index the player is located in"""
+        return int((self.center_x + config.SPRITE_PIXEL_SIZE / 2) // 320)
+
+    def distance_to_block(self, block):
+        """Distance from player and a block"""
+        return math.sqrt(
+            (self.center_x - block.center_x) ** 2 + (self.center_y - block.center_y) ** 2
+        )
+
     def on_key_press(self, key_pressed: int, modifier: int) -> None:
         """Called whenever a key is pressed.
 
@@ -117,8 +129,3 @@ class Player(Entity):
         if key_released in (key.LEFT, key.RIGHT):
             self.change_x = 0
             self.direction = None
-
-    @property
-    def chunk(self):
-        """The chunk index the player is located in"""
-        return int(self.center_x // 320)

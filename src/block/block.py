@@ -2,7 +2,6 @@ import time
 from typing import Optional
 
 import arcade
-from arcade.texture import load_texture
 
 from misc.item import Item
 import config
@@ -92,7 +91,7 @@ class Block(arcade.Sprite):
     # Optimization experiment
     # def _get_left(self):
     #     return self.center_x - self.width / 2
-    
+
     # def _get_right(self):
     #     return self.center_x + self.width / 2
 

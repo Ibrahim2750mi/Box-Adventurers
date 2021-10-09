@@ -1,4 +1,4 @@
-import math
+from typing import Optional, Tuple
 
 import arcade
 import arcade.gui
@@ -16,25 +16,24 @@ class Game(arcade.View):
         """Initializer"""
         super().__init__()
 
-        self.bg_music: arcade.Sound = None
+        self.bg_music: Optional[arcade.Sound] = None
         self.break_cooldown = False
         self.place_cooldown = False
         self.hud_camera = arcade.Camera(*self.window.get_size())
         self.world = World(screen_size=self.window.get_size(), name="default")
 
-        self.bx = 0
-        self.by = 0
+        # Block selection position
+        self.bx = None
+        self.by = None
 
         # TODO: Is this necessary?
         self.world.player.inventory.setup_coords((0, 0))
 
-        self.bg_music = None
         if config.MUSIC:
-            self.bg_music = arcade.Sound(config.ASSET_DIR / "music" / "main_game_tune.wav")
+            self.bg_music = arcade.Sound(
+                config.ASSET_DIR / "music" / "main_game_tune.wav"
+            )
             self.bg_music.play(loop=True)
-
-        self.bx = self.world.player.center_x
-        self.by = self.world.player.center_y
 
     def setup(self):
         self.world.create()
@@ -43,22 +42,25 @@ class Game(arcade.View):
         self.window.clear()
 
         self.world.draw()
-        arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, color.RED, 1)
+
+        # Draw the block selection
+        if self.bx is not None and self.by is not None:
+            arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, color.WHITE, 1)
 
         self.hud_camera.use()
         self.world.player.inventory.smart_draw()
-        arcade.draw_rectangle_outline(self.bx, self.by, 30, 30, color=color.RED)
 
     def on_update(self, delta_time: float) -> None:
         """Movement and game logic."""
         # print(delta_time)
         self.world.update()
         self.world.player.inventory.update()
-        self.window.ctx.gc()
-
-    def on_resize(self, width, height):
-        self.hud_camera.resize(width, height)
-        self.world.camera.resize(width, height)
+        # We created the window with gc_mode="context_gc" and must
+        # manually garbage collect OpenGL resources (if any)
+        num_deleted = self.window.ctx.gc()
+        # Notify us when resources are deleted
+        if num_deleted:
+            print(f"Arcade garbage collector deleted {num_deleted} OpenGL resources")
 
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when keyboard is pressed"""
@@ -69,43 +71,29 @@ class Game(arcade.View):
         self.world.player.on_key_release(key, modifiers)
 
     def on_mouse_motion(self, x, y, dx, dy):
-        tmp_x = x + self.world.camera.position[0]
-        tmp_y = y + self.world.camera.position[1]
-        self.bx = tmp_x
-        self.by = tmp_y
+        world_x, world_y = self.screen_to_world_position(x, y)
+        block = self.world.get_block_at_world_position(world_x, world_y)
 
-    def on_mouse_press(self, x: int, y: int, button: int, key_modifiers: int) -> None:
+        # Only show the marker when there is a valid block selection
+        if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
+            self.bx, self.by = block.position[0], block.position[1]
+        else:
+            self.bx, self.by = None, None
+
+    def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
+        world_x, world_y = self.screen_to_world_position(x, y)
 
-        tmp_x = x + self.world.camera.position[0]
-        tmp_y = y + self.world.camera.position[1]
-
-        block = None
-        block_dist = math.sqrt((player.center_x - tmp_x)**2 + (player.center_y - tmp_y)**2)
-
-        # TODO: This part needs work
-        chunk = self.world.whole_world.get(tmp_x // 320)
-
-        self.bx = tmp_x
-        self.by = tmp_y
-
-        if not chunk:
-            return
-        for sprite in chunk.spritelist:
-            if tmp_x + 10 >= sprite.center_x >= tmp_x - 10 and tmp_y + 10 >= sprite.center_y >= tmp_y - 10:
-                block = sprite
-                print(block.center_x, tmp_x, block.center_y, tmp_y)
-
-        if not block:
-            return
-        if button == MOUSE_BUTTON_LEFT and not self.break_cooldown:
-            # if block is within range and is not sky then break it
-            if block_dist <= 100:
-                self.world.player.inventory.add(Item(True, block.block_id))
-                chunk.remove(block)
-
-        # elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
-        #     distance <= 100 and block[0].block_id <= 129 and self.place_block)
+        if button == MOUSE_BUTTON_LEFT:
+            # Attempt to remove a block in the world
+            block = self.world.get_block_at_world_position(world_x, world_y)
+            # NOTE: This can be improved later with can_break(block) looking at other game states
+            if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
+                block.remove_from_sprite_lists()
+                player.inventory.add(Item(True, block.block_id))
+        elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
+            # Attempt to place a block in the world
+            pass
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         """ Called when the user presses a mouse button. """
@@ -113,6 +101,20 @@ class Game(arcade.View):
             self.break_cooldown = False
         if button == MOUSE_BUTTON_RIGHT:
             self.place_cooldown = False
+
+    def on_resize(self, width, height):
+        self.hud_camera.resize(width, height)
+        self.world.camera.resize(width, height)
+
+    def screen_to_world_position(self, screen_x: float = 0, screen_y: float = 0) -> Tuple[float, float]:
+        """
+        Convert screen to world position.
+        This is normally used to convert mouse coordinates.
+        """
+        return (
+            screen_x + self.world.camera.position[0],
+            screen_y + self.world.camera.position[1],
+        )
 
 
 # --- Method 1 for handling click events,
