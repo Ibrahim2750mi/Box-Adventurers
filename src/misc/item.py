@@ -18,10 +18,11 @@ class Item(Sprite):
         self.height = config.ICON_SIZE * config.INVENTORY_SCALING
         self.block_id = block_id
 
-    def draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
-        super().draw(pixelated=True)
+    def smart_draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
         self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
         self.center_y = cen_y - (inv_height / 2) + 2 + 29
 
+        self.draw(pixelated=True)
+
         # draw_text("20", self.center_x - 20, self.center_y - 20, WHITE, 18)
-        draw_text(str(self.amount), self.center_x + 10, self.center_y - 20, WHITE, 20, width=40)
+        draw_text(str(self.amount), self.center_x + 5, self.center_y - 20, WHITE, 12)

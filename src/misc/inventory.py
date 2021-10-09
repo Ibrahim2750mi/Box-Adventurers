@@ -40,7 +40,6 @@ class Inventory(Sprite):
                         self.filled_slots += 1
                     else:
                         slot_item.amount += 1
-                        slot_item.draw(i, self.center_x, self.center_y, self.width, self.height)
                     break
         if not added:
             self.slots[self.get_free_slot()] = item
@@ -56,8 +55,12 @@ class Inventory(Sprite):
                 return slot
         raise InventoryFullError
 
-    def draw(self, *, filter=None, pixelated=None, blend_function=None):
-        super().draw(pixelated=True)
+    def smart_draw(self):
+        self.draw(pixelated=True)
+        for slot, item in self.slots.items():
+            if item:
+                item.smart_draw(slot, self.center_x, self.center_y, self.width, self.height)
+
 
     def remove(self, item: Item) -> None:
         for i in range(len(self.slots), 0, -1):

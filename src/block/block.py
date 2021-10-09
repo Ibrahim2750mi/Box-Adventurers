@@ -48,7 +48,7 @@ class Block(arcade.Sprite):
         # self.break_mask = BreakMask()
         # self.ORIGINAL_IMAGE = self.texture.image
         # self.bright = bright
-        # self.breaking_time = breaking_time
+        self.breaking_time = breaking_time
         # self.break_time_left = breaking_time
         # self.break_textures = BREAK_TEXTURES
         # self.anim_pos = 0

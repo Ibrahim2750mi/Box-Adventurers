@@ -46,7 +46,7 @@ class Game(arcade.View):
         arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, color.RED, 1)
 
         self.hud_camera.use()
-        self.world.player.inventory.draw()
+        self.world.player.inventory.smart_draw()
         arcade.draw_rectangle_outline(self.bx, self.by, 30, 30, color=color.RED)
 
     def on_update(self, delta_time: float) -> None:
