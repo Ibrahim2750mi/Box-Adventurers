@@ -58,6 +58,8 @@ class Inventory(Sprite):
     def smart_draw(self):
         self.draw(pixelated=True)
         for slot, item in self.slots.items():
+            if slot == self.selected_slot:
+                self.draw_outline(slot)
             if item:
                 item.smart_draw(slot, self.center_x, self.center_y, self.width, self.height)
 
@@ -90,3 +92,11 @@ class Inventory(Sprite):
             return
 
         return item.replicate(center_x, center_y)
+
+    def draw_outline(self, slot: int):
+        rw = config.ICON_SIZE * config.INVENTORY_SCALING
+        rx = self.center_x - (self.width / 2) + config.INVENTORY_SCALING * 15 \
+            + ((rw + config.INVENTORY_SCALING) * (slot - 1))
+        ry = self.center_y - (self.height / 2) + 2 + config.INVENTORY_SCALING * 10
+        arcade.draw_rectangle_outline(center_x=rx, center_y=ry, width=rw, height=rw, color=
+                                      (200, 200, 200), border_width=4)

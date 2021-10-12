@@ -1,4 +1,4 @@
-from arcade import Sprite, draw_text
+from arcade import Sprite, draw_text, draw_rectangle_outline
 from arcade.csscolor import WHITE
 import config
 
@@ -19,8 +19,9 @@ class Item(Sprite):
         self.block_id = block_id
 
     def smart_draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
-        self.center_x = cen_x - (inv_width / 2) + 45 + ((self.width + 3) * (slot - 1))
-        self.center_y = cen_y - (inv_height / 2) + 2 + 29
+        self.center_x = cen_x - (inv_width / 2) + config.INVENTORY_SCALING * 15 + \
+                        ((self.width + config.INVENTORY_SCALING) * (slot - 1))
+        self.center_y = cen_y - (inv_height / 2) + 2*config.INVENTORY_SCALING/3 + config.INVENTORY_SCALING * 9.68
 
         self.draw(pixelated=True)
 
@@ -31,7 +32,7 @@ class Item(Sprite):
         """Replicate for the player hand."""
         return Sprite(
             filename=config.ASSET_DIR / "sprites" / f"{self.block_id}.png",
-            scale=0.025 * config.SPRITE_PIXEL_SIZE,
+            scale=1/(2 * config.SPRITE_PIXEL_SIZE),
             center_x=center_x,
             center_y=center_y
         )
