@@ -1,5 +1,5 @@
 from itertools import combinations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import arcade
 import numpy as np
@@ -129,7 +129,7 @@ class HorizontalChunk:
         self._block_add(new_block)
 
     def add(self, center_x, center_y, block_id):
-        block = self._block_data.get((center_x // 20, center_y // 20))
+        block = self._block_data.get((center_x // config.SPRITE_PIXEL_SIZE, center_y // config.SPRITE_PIXEL_SIZE))
         if not block:
             return
         block.remove_from_sprite_lists()
@@ -149,7 +149,10 @@ class HorizontalChunk:
         self._block_add(new_block)
 
     def get_neighbouring_blocks(self, block: Block) -> Dict[str, Optional[Block]]:
-        bx, by = block.center_x // 20, block.center_y // 20
+        bx, by = (block.center_x // config.SPRITE_PIXEL_SIZE) % config.CHUNK_WIDTH, (block.center_y //
+                                                                                     config.SPRITE_PIXEL_SIZE) %\
+                 config.CHUNK_HEIGHT
+
         y_dict = {1: "N", 0: "", -1: "S"}
         x_dict = {1: "E", 0: "", -1: "W"}
         unique_combs = set(combinations(self.COMBINATIONS, 2))
@@ -161,11 +164,15 @@ class HorizontalChunk:
         return ret
 
     def _block_add(self, new_block: Block):
-        key_ = ((new_block.center_x // 20) % 15, (new_block.center_y // 20) % 15)
+        key_ = ((new_block.center_x // config.SPRITE_PIXEL_SIZE) % config.CHUNK_WIDTH, (new_block.center_y //
+                                                                                        config.SPRITE_PIXEL_SIZE) %
+                config.CHUNK_HEIGHT)
         self.data[key_] = new_block.block_id
         self._block_data[key_] = new_block
 
     def _block_remove(self, x: int, y: int):
-        key_ = ((x // 20) % 15, (y // 20) % 15)
+        key_ = ((x // config.SPRITE_PIXEL_SIZE) % config.CHUNK_WIDTH, (y //
+                                                                       config.SPRITE_PIXEL_SIZE) %
+                config.CHUNK_HEIGHT)
         del (self.data[key_])
         del (self._block_data[key_])
