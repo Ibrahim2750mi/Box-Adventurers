@@ -1,6 +1,7 @@
 import gzip
 import pickle
 from collections import deque
+from math import atan, pi
 import time
 from typing import Optional, Tuple, Set
 import threading
@@ -243,9 +244,65 @@ class World:
             return
         self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
 
+    def remove_block(self, block: Block):
+        x = block.center_x
+        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].remove(block)
+
     @property
     def whole_world(self):
         return self._whole_world
+
+    def dir_of_mouse_from_player(self, mouse_x, mouse_y):
+        player = self._player_sprite
+        div = pi / 8
+        x = mouse_x - player.center_x
+        y = mouse_y - player.center_y
+        direction = ""
+        if y > 0:
+            if div > atan(x / y) >= -div:
+                direction += "N"
+            elif 3 * div > atan(x / y) >= div:
+                direction += "NE"
+
+            if direction:
+                return direction
+
+        if x > 0:
+            if 4 * div > atan(x / y) >= 3 * div or 0 > atan(x / y) >= -div:
+                direction += "E"
+            elif -div > atan(x / y) >= -3 * div:
+                direction += "SE"
+
+            if direction:
+                return direction
+
+        if y < 0:
+            if -3 * div > atan(x / y) >= -4 * div or div > atan(x / y) >= 0:
+                direction += "S"
+            elif 3 * div > atan(x / y) >= div:
+                direction += "SW"
+
+            if direction:
+                return direction
+
+        if x < 0:
+            if 4 * div > atan(x / y) >= 3 * div or 0 > atan(x / y) >= -div:
+                direction += "W"
+            elif -div > atan(x / y) >= -3 * div:
+                direction += "NW"
+
+        return direction
+
+    def block_break_check(self, block: Block):
+        if not self._player_sprite.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
+            return False
+        reverse = {"S": "N", "N": "S", "SW": "NE", "NE": "SW", "E": "W", "W": "E", "SE": "NW", "NW": "SE"}
+        direction = self.dir_of_mouse_from_player(block.center_x, block.center_y)
+        block_neighbours = self.get_chunk_at_world_position(block.center_x, block.center_y)\
+            .get_neighbouring_blocks(block)
+        if block_neighbours[reverse[direction]]:
+            return False
+        return True
 
 
 class ChunkLoader:

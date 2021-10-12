@@ -108,6 +108,6 @@ class Inventory(Sprite):
         rw = config.ICON_SIZE * config.INVENTORY_SCALING
         rx = self.center_x - (self.width / 2) + config.INVENTORY_SCALING * 15 \
             + ((rw + config.INVENTORY_SCALING) * (slot - 1))
-        ry = self.center_y - (self.height / 2) + 2 + config.INVENTORY_SCALING * 10
+        ry = self.center_y - (self.height / 2) + 2 + config.INVENTORY_SCALING * 29/3
         arcade.draw_rectangle_outline(center_x=rx, center_y=ry, width=rw, height=rw, color=
                                       (200, 200, 200), border_width=4)

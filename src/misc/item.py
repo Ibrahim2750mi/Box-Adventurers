@@ -21,7 +21,7 @@ class Item(Sprite):
     def smart_draw(self, slot: int, cen_x: float, cen_y: float, inv_width: int, inv_height: int) -> None:
         self.center_x = cen_x - (inv_width / 2) + config.INVENTORY_SCALING * 15 + \
                         ((self.width + config.INVENTORY_SCALING) * (slot - 1))
-        self.center_y = cen_y - (inv_height / 2) + 2*config.INVENTORY_SCALING/3 + config.INVENTORY_SCALING * 9.68
+        self.center_y = cen_y - (inv_height / 2) + 2*config.INVENTORY_SCALING/3 + config.INVENTORY_SCALING * 29/3
 
         self.draw(pixelated=True)
 

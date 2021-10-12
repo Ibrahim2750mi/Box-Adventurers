@@ -89,11 +89,11 @@ class Game(arcade.View):
         player = self.world.player
         world_x, world_y = self.screen_to_world_position(x, y)
         block = self.world.get_block_at_world_position(world_x, world_y)
-
+        self.world.dir_of_mouse_from_player(world_x, world_y)
         if button == MOUSE_BUTTON_LEFT:
             # NOTE: This can be improved later with can_break(block) looking at other game states
-            if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
-                block.remove_from_sprite_lists()
+            if block and self.world.block_break_check(block):
+                self.world.remove_block(block)
                 player.inventory.add(Item(True, block.block_id))
         elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
             if block:
