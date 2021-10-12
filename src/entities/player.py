@@ -1,4 +1,5 @@
 import math
+from abc import ABC
 from enum import Enum
 from typing import Optional
 
@@ -8,6 +9,7 @@ import arcade
 from entities.entity import Entity
 from misc.inventory import Inventory
 import config
+
 
 class Direction(Enum):
     LEFT = 0
@@ -94,16 +96,8 @@ class Player(Entity):
             (self.center_x - block.center_x) ** 2 + (self.center_y - block.center_y) ** 2
         )
 
-    def on_key_press(self, key_pressed: int, modifier: int) -> None:
-        """Called whenever a key is pressed.
-
-        :param key_pressed: Key that got pressed.
-        :type key_pressed: int
-        :param modifier: Modifiers pressed with the key.
-        :type modifier: int
-        :param can_jump: If the player on the ground.
-        :type can_jump: bool
-        """
+    def on_key_press(self, key_pressed: int, _: int) -> None:
+        """Called whenever a key is pressed."""
         if key_pressed in (key.UP, key.W):
             if self.physics_engine.can_jump():
                 self.change_y = self.jump_speed
@@ -118,14 +112,32 @@ class Player(Entity):
             self.last_faced_dir = "right"
             self.texture = self.textures[Direction.RIGHT.value]
 
-    def on_key_release(self, key_released: int, modifiers: int) -> None:
-        """Called when the user releases a key.
-
-        :param key_pressed: Key that was released.
-        :type key_pressed: int
-        :param modifiers: Modifiers that were released with the key.
-        :type modifiers: int
-        """
+    def on_key_release(self, key_released: int, _: int) -> None:
+        """Called when the user releases a key."""
         if key_released in (key.LEFT, key.RIGHT, key.A, key.D):
             self.change_x = 0
             self.direction = None
+
+    @property
+    def hand(self) -> Optional[arcade.Sprite]:
+        return self.inventory.get_selected_item(self.center_x - 8, self.center_y - 8)
+
+
+class PlayerSpriteList(arcade.SpriteList, ABC):
+    def __init__(self, player: Player):
+        super(PlayerSpriteList, self).__init__()
+        self.player = player
+        self.append(player)
+
+    def update_list(self):
+        if len(self) != 1:
+            self.pop()
+        hand = self.player.hand
+        if not hand:
+            return
+        self.append(hand)
+
+    def __str__(self):
+        if len(self) == 1:
+            return str(self[0])
+        return str(self[0], self[1])

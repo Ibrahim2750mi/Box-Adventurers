@@ -26,3 +26,12 @@ class Item(Sprite):
 
         # draw_text("20", self.center_x - 20, self.center_y - 20, WHITE, 18)
         draw_text(str(self.amount), self.center_x + 5, self.center_y - 20, WHITE, 12)
+
+    def replicate(self, center_x: int, center_y: int):
+        """Replicate for the player hand."""
+        return Sprite(
+            filename=config.ASSET_DIR / "sprites" / f"{self.block_id}.png",
+            scale=0.025 * config.SPRITE_PIXEL_SIZE,
+            center_x=center_x,
+            center_y=center_y
+        )

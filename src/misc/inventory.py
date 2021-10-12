@@ -1,5 +1,6 @@
 from typing import Optional
 
+import arcade.key
 from arcade import Sprite
 from pyglet.math import Vec2
 
@@ -23,9 +24,9 @@ class Inventory(Sprite):
         self.max_slots: int = config.MAX_SLOTS
         self.slots: dict[int, Optional[Item]] = {i: None for i in range(1, self.max_slots + 1)}
         self.filled_slots = 0
+        self.selected_slot = 1
 
     def add(self, item: Item) -> None:
-        print(self.slots)
         if self.filled_slots == self.max_slots:
             raise InventoryFullError
         added = False
@@ -34,7 +35,6 @@ class Inventory(Sprite):
                 slot_item = self.slots[i]
                 if slot_item is not None and slot_item.block_id == item.block_id:
                     added = True
-                    print(slot_item.amount)
                     if slot_item.amount == config.MAX_STACK:
                         self.slots[self.get_free_slot()] = item
                         self.filled_slots += 1
@@ -61,7 +61,6 @@ class Inventory(Sprite):
             if item:
                 item.smart_draw(slot, self.center_x, self.center_y, self.width, self.height)
 
-
     def remove(self, item: Item) -> None:
         for i in range(len(self.slots), 0, -1):
             slot_item = self.slots[i]
@@ -70,3 +69,24 @@ class Inventory(Sprite):
                 if slot_item.amount == 0:
                     self.slots[i] = None
                 break
+
+    def change_slot_keyboard(self, key_pressed: int = 0):
+        # https://api.arcade.academy/en/latest/arcade.key.html?highlight=arcade.key ->  Numbers on the main keyboard
+        if 57 >= key_pressed > 48:
+            self.selected_slot = key_pressed - 48
+
+    def change_slot_mouse(self, scroll_y: int = 0):
+        if self.selected_slot == 1 and abs(scroll_y) == scroll_y:
+            self.selected_slot = 9
+            return
+        elif self.selected_slot == 9 and abs(scroll_y) != scroll_y:
+            self.selected_slot = 1
+            return
+        self.selected_slot -= scroll_y
+
+    def get_selected_item(self, center_x: int, center_y: int) -> Optional[arcade.Sprite]:
+        item = self.slots[self.selected_slot]
+        if not item:
+            return
+
+        return item.replicate(center_x, center_y)

@@ -7,7 +7,7 @@ import threading
 from queue import Empty, Queue
 
 import arcade
-from entities.player import Player
+from entities.player import Player, PlayerSpriteList
 from block.block import Block
 from misc.camera import CustomCamera
 from misc.terrain import gen_world
@@ -30,7 +30,6 @@ class World:
 
         # Player
         # TODO: Find a safe initial spawn position
-        self._player_list: arcade.SpriteList = arcade.SpriteList()
         self._player_sprite = Player(
             "player",
             scale=config.PLAYER_SCALING,
@@ -42,7 +41,7 @@ class World:
             jump_speed=config.JUMP_SPEED,
             flipped_horizontally=False,
         )
-        self._player_list.append(self._player_sprite)
+        self._player_list: PlayerSpriteList = PlayerSpriteList(self._player_sprite)
 
         # Initial physics engine with no chunks
         self._physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(
@@ -85,7 +84,9 @@ class World:
 
         if self._player_sprite.center_y < -100:
             self._player_sprite.set_position(self._player_default_x, self._player_default_y)
+
         self._physics_engine.update()
+        self._player_list.update_list()
 
     def create(self):
         """Create the initial world state"""

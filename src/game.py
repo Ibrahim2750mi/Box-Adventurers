@@ -65,20 +65,14 @@ class Game(arcade.View):
     def on_key_press(self, key: int, modifiers: int) -> None:
         """Called when keyboard is pressed"""
         self.world.player.on_key_press(key, modifiers)
+        self.world.player.inventory.change_slot_keyboard(key)
 
     def on_key_release(self, key: int, modifiers: int) -> None:
         """Called when keyboard is released"""
         self.world.player.on_key_release(key, modifiers)
 
     def on_mouse_motion(self, x, y, dx, dy):
-        world_x, world_y = self.screen_to_world_position(x, y)
-        block = self.world.get_block_at_world_position(world_x, world_y)
-
-        # Only show the marker when there is a valid block selection
-        if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
-            self.bx, self.by = block.position[0], block.position[1]
-        else:
-            self.bx, self.by = None, None
+        pass
 
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
@@ -92,8 +86,10 @@ class Game(arcade.View):
                 block.remove_from_sprite_lists()
                 player.inventory.add(Item(True, block.block_id))
         elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
-            # Attempt to place a block in the world
             pass
+
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        self.world.player.inventory.change_slot_mouse(scroll_y)
 
     def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
         """ Called when the user presses a mouse button. """
