@@ -259,14 +259,13 @@ class World:
         y = mouse_y - player.center_y
         direction = ""
         if y > 0:
-            if div > atan(x / y) >= -div:
+            if div > atan(x / y) >= 0 or -3*div > atan(x/y) >= -4*div:
                 direction += "N"
             elif 3 * div > atan(x / y) >= div:
                 direction += "NE"
 
             if direction:
                 return direction
-
         if x > 0:
             if 4 * div > atan(x / y) >= 3 * div or 0 > atan(x / y) >= -div:
                 direction += "E"
@@ -275,7 +274,6 @@ class World:
 
             if direction:
                 return direction
-
         if y < 0:
             if -3 * div > atan(x / y) >= -4 * div or div > atan(x / y) >= 0:
                 direction += "S"
@@ -284,7 +282,6 @@ class World:
 
             if direction:
                 return direction
-
         if x < 0:
             if 4 * div > atan(x / y) >= 3 * div or 0 > atan(x / y) >= -div:
                 direction += "W"

@@ -146,7 +146,6 @@ class HorizontalChunk:
             center_y=center_y
         )
         self._blocks.append(new_block)
-        print("called")
         self._block_add(new_block)
 
     def get_neighbouring_blocks(self, block: Block) -> Dict[str, Optional[Block]]:
@@ -162,11 +161,11 @@ class HorizontalChunk:
         return ret
 
     def _block_add(self, new_block: Block):
-        key_ = (new_block.center_x // 20, new_block.center_y // 20)
+        key_ = ((new_block.center_x // 20) % 15, (new_block.center_y // 20) % 15)
         self.data[key_] = new_block.block_id
         self._block_data[key_] = new_block
 
     def _block_remove(self, x: int, y: int):
-        key_ = (x // 20, y // 20)
+        key_ = ((x // 20) % 15, (y // 20) % 15)
         del (self.data[key_])
         del (self._block_data[key_])
