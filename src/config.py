@@ -3,8 +3,10 @@ from pathlib import Path
 ASSET_DIR = (Path(__file__).parent.parent / "assets").resolve()
 DATA_DIR = (Path(__file__).parent.parent / "data").resolve()
 
+MAX_SLOTS = 10
+
 SPRITE_SCALING = 1.0
-INVENTORY_SCALING = 2.4545454545454546
+INVENTORY_SCALING = (3/11) * MAX_SLOTS
 PLAYER_SCALING = 1.0
 
 SCREEN_WIDTH = 1200
@@ -22,7 +24,6 @@ JUMP_SPEED = 24 * SPRITE_SCALING
 GRAVITY = 1 * SPRITE_SCALING
 PLAYER_BLOCK_REACH = 100  # 100 pixel reach to block
 
-MAX_SLOTS = 9
 MAX_STACK = 99
 
 MUSIC = False

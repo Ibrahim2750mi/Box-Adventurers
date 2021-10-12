@@ -76,12 +76,14 @@ class Inventory(Sprite):
         # https://api.arcade.academy/en/latest/arcade.key.html?highlight=arcade.key ->  Numbers on the main keyboard
         if 57 >= key_pressed > 48:
             self.selected_slot = key_pressed - 48
+        elif key_pressed == 48:
+            self.selected_slot = 10
 
     def change_slot_mouse(self, scroll_y: int = 0):
         if self.selected_slot == 1 and abs(scroll_y) == scroll_y:
-            self.selected_slot = 9
+            self.selected_slot = 10
             return
-        elif self.selected_slot == 9 and abs(scroll_y) != scroll_y:
+        elif self.selected_slot == 10 and abs(scroll_y) != scroll_y:
             self.selected_slot = 1
             return
         self.selected_slot -= scroll_y
