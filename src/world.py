@@ -235,6 +235,14 @@ class World:
 
         return None
 
+    def place_block(self, x: int, y: int):
+        actual_x = config.SPRITE_PIXEL_SIZE * round(x / config.SPRITE_PIXEL_SIZE)
+        actual_y = config.SPRITE_PIXEL_SIZE * round(y / config.SPRITE_PIXEL_SIZE)
+        block_id = self._player_sprite.inventory.get_selected_item_id_and_remove()
+        if not block_id:
+            return
+        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
+
     @property
     def whole_world(self):
         return self._whole_world

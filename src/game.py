@@ -88,16 +88,17 @@ class Game(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
         world_x, world_y = self.screen_to_world_position(x, y)
+        block = self.world.get_block_at_world_position(world_x, world_y)
 
         if button == MOUSE_BUTTON_LEFT:
-            # Attempt to remove a block in the world
-            block = self.world.get_block_at_world_position(world_x, world_y)
             # NOTE: This can be improved later with can_break(block) looking at other game states
             if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
                 block.remove_from_sprite_lists()
                 player.inventory.add(Item(True, block.block_id))
         elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
-            pass
+            if block:
+                return
+            self.world.place_block(world_x, world_y)
 
     def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
         self.world.player.inventory.change_slot_mouse(scroll_y)

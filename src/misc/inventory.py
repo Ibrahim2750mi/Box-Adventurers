@@ -95,6 +95,15 @@ class Inventory(Sprite):
 
         return item.replicate(center_x, center_y)
 
+    def get_selected_item_id_and_remove(self) -> Optional[int]:
+        item = self.slots[self.selected_slot]
+        if not item:
+            return
+        item.amount -= 1
+        if not item.amount:
+            self.slots[self.selected_slot] = None
+        return item.block_id
+
     def draw_outline(self, slot: int):
         rw = config.ICON_SIZE * config.INVENTORY_SCALING
         rx = self.center_x - (self.width / 2) + config.INVENTORY_SCALING * 15 \

@@ -24,6 +24,7 @@ class HorizontalChunk:
 
         self._blocks = arcade.SpriteList(use_spatial_hash=True, lazy=True)
         self._bg_blocks = arcade.SpriteList(use_spatial_hash=True, lazy=True)
+        self._bg_block_dict: dict = dict()
 
         self.bg_block_count = 0
         self.other_block_count = 0
@@ -61,7 +62,8 @@ class HorizontalChunk:
     def make_sprite_list(self):
         for (x_inc, y_inc), block_id in self.data.items():
             # HACK: Remove air blocks for now. No longer the hack is needed.
-
+            cx = (self._x + x_inc) * config.SPRITE_PIXEL_SIZE
+            cy = y_inc * config.SPRITE_PIXEL_SIZE
             block = Block(
                 width=config.SPRITE_PIXEL_SIZE,
                 height=config.SPRITE_PIXEL_SIZE,
@@ -69,13 +71,14 @@ class HorizontalChunk:
                 hp=2,
                 block_id=block_id,
                 bright=False,
-                center_x=(self._x + x_inc) * config.SPRITE_PIXEL_SIZE,
-                center_y=y_inc * config.SPRITE_PIXEL_SIZE)
+                center_x=cx,
+                center_y=cy)
 
             if block_id > 129:
                 self._blocks.append(block)
             else:
                 self._bg_blocks.append(block)
+                self._bg_block_dict[(cx, cy)] = block
 
             yield
 
@@ -114,3 +117,20 @@ class HorizontalChunk:
                           center_x=block.center_x,
                           center_y=block.center_y)
         self._bg_blocks.append(new_block)
+
+    def add(self, center_x, center_y, block_id):
+        new_block = Block(
+            width=config.SPRITE_PIXEL_SIZE,
+            height=config.SPRITE_PIXEL_SIZE,
+            breaking_time=2,
+            hp=2,
+            block_id=block_id,
+            bright=False,
+            center_x=center_x,
+            center_y=center_y
+        )
+        self._blocks.append(new_block)
+        block = self._bg_block_dict.get((center_x, center_y))
+        if not block:
+            return
+        block.remove_from_sprite_lists()
