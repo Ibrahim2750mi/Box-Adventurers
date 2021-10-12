@@ -25,6 +25,7 @@ class Game(arcade.View):
         # Block selection position
         self.bx = None
         self.by = None
+        self.b_color = color.RED
 
         # TODO: Is this necessary?
         self.world.player.inventory.setup_coords((0, 0))
@@ -45,7 +46,7 @@ class Game(arcade.View):
 
         # Draw the block selection
         if self.bx is not None and self.by is not None:
-            arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, color.WHITE, 1)
+            arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, self.b_color, 1)
 
         self.hud_camera.use()
         self.world.player.inventory.smart_draw()
@@ -72,7 +73,17 @@ class Game(arcade.View):
         self.world.player.on_key_release(key, modifiers)
 
     def on_mouse_motion(self, x, y, dx, dy):
-        pass
+        world_x, world_y = self.screen_to_world_position(x, y)
+        block = self.world.get_block_at_world_position(world_x, world_y)
+
+        # Only show the marker when there is a valid block selection.
+        self.bx, self.by = world_x, world_y
+        if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
+            self.b_color = color.GREEN
+        elif block:
+            self.b_color = color.WHITE
+        else:
+            self.b_color = color.RED
 
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
