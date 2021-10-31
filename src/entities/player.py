@@ -122,6 +122,11 @@ class Player(Entity):
     def hand(self) -> Optional[arcade.Sprite]:
         return self.inventory.get_selected_item(self.center_x - 8, self.center_y - 8)
 
+    @property
+    def eyes(self) -> int:
+        """Returns the Y position of the player's eyes."""
+        return self.center_y + (config.PLAYER_SCALING * 16)
+
 
 class PlayerSpriteList(arcade.SpriteList, ABC):
     def __init__(self, player: Player):

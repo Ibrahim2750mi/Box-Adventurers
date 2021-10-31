@@ -88,11 +88,12 @@ class Game(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
         world_x, world_y = self.screen_to_world_position(x, y)
+        print(player.center_y, world_y, player.center_x, world_x)
         block = self.world.get_block_at_world_position(world_x, world_y)
 
         if button == MOUSE_BUTTON_LEFT:
             # NOTE: This can be improved later with can_break(block) looking at other game states
-            if block and self.world.block_break_check(block):
+            if block and self.world.block_break_check(block, world_x, world_y):
                 self.world.remove_block(block)
                 player.inventory.add(Item(True, block.block_id))
         elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:

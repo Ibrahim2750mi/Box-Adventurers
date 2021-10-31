@@ -256,7 +256,7 @@ class World:
         player = self._player_sprite
         div = pi / 8
         x = mouse_x - player.center_x
-        y = mouse_y - player.center_y
+        y = mouse_y - player.eyes
         direction = ""
         if y > 0:
             if div > atan(x / y) >= 0 or -3*div > atan(x/y) >= -4*div:
@@ -290,11 +290,11 @@ class World:
 
         return direction
 
-    def block_break_check(self, block: Block):
+    def block_break_check(self, block: Block, mouse_x: int, mouse_y: int) -> bool:
         if not self._player_sprite.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
             return False
         reverse = {"S": "N", "N": "S", "SW": "NE", "NE": "SW", "E": "W", "W": "E", "SE": "NW", "NW": "SE"}
-        direction = self.dir_of_mouse_from_player(block.center_x, block.center_y)
+        direction = self.dir_of_mouse_from_player(mouse_x, mouse_y)
         block_neighbours = self.get_chunk_at_world_position(block.center_x, block.center_y)\
             .get_neighbouring_blocks(block)
         if block_neighbours[reverse[direction]]:
