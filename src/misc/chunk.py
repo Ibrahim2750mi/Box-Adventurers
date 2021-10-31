@@ -1,12 +1,13 @@
+from collections import Counter
 from itertools import combinations
 from typing import Any, Dict, Optional
 
 import arcade
 import numpy as np
-import numpy.typing as npt
 
 from block.block import Block
 import config
+import utils
 
 
 class HorizontalChunk:
@@ -32,6 +33,8 @@ class HorizontalChunk:
 
         self.bg_block_count = 0
         self.other_block_count = 0
+
+        self.biomes = {}
 
     @property
     def x(self) -> int:
@@ -90,9 +93,9 @@ class HorizontalChunk:
     def __getitem__(self, key: int):
         return self.data[key]
 
-    def __setitem__(self, _: Any, value: npt.NDArray[np.int_]):
+    def __setitem__(self, _: Any, value: utils.TArray):
         self._chunks += 1
-        for y_row in np.flip(value):
+        for y_row in np.flip(value.arr):
             for x_inc, block_ in enumerate(y_row):
                 if block_ > 129:
                     self.other_block_count += 1
@@ -100,6 +103,9 @@ class HorizontalChunk:
                     self.bg_block_count += 1
                 self.data[x_inc, self._y] = block_
             self._y += 1
+        c = Counter(self.biomes)
+        c.update(value.adv_info)
+        self.biomes = dict(c)
 
     def __iter__(self):
         return self.data.__iter__()
@@ -155,6 +161,7 @@ class HorizontalChunk:
 
         y_dict = {1: "N", 0: "", -1: "S"}
         x_dict = {1: "E", 0: "", -1: "W"}
+        # sets remove duplicate values.
         unique_combs = set(combinations(self.COMBINATIONS, 2))
         ret = {}
         for x, y in unique_combs:

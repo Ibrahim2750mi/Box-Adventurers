@@ -186,7 +186,7 @@ class World:
             for n in range(-31, 31):
                 self._whole_world[n] = HorizontalChunk(n * 16, n)
 
-            world = gen_world(-496, 496, 0, 320)
+            world = gen_world(-496, 496, config.HEIGHT_MIN, config.HEIGHT_MIN + 320)
             for k, chunk_data in world.items():
                 n = int(k[1] / 16)
                 self._whole_world[n]['setter'] = chunk_data

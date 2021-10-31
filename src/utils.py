@@ -1,4 +1,8 @@
 from time import perf_counter
+from typing import Optional, Tuple
+
+import numpy as np
+import numpy.typing as npt
 
 
 class Timer:
@@ -13,3 +17,16 @@ class Timer:
     def print(self):
         """Stop the timer and print the result"""
         print(f"Timer: {self.name} {perf_counter() - self.time_start}")
+
+
+class TArray:
+    def __init__(self, arr: Optional[np.NDarray[np.int_]] = None, info: int = None):
+        self.arr = arr or {}
+        self.info = info
+        self.adv_info = {}
+
+    def __setitem__(self, key, value):
+        self.arr.__setitem__(key, value)
+
+    def __getitem__(self, item):
+        self.arr.__getitem__(item)
