@@ -9,6 +9,7 @@ import numpy as np
 import numpy.typing as npt
 
 from utils import TArray
+import config
 
 # BLOCK CODES
 
@@ -107,8 +108,9 @@ def __gen_empty_chunks(x_min: int, x_max: int, y_min: int, y_max: int) \
     return world
 
 
-def __sky_gen(y_max: int) -> TArray:
+def __sky_gen(y_max: int = None) -> TArray:
     # For generating the sky.
+    y_max = config.HEIGHT_MIN + 320
     sky = TArray(np.full((16, 16), 128))
     clouds_co_ords = np.random.randint(16, size=(14, 2))
     sky = __placer(4, 129, clouds_co_ords, sky)
@@ -116,8 +118,9 @@ def __sky_gen(y_max: int) -> TArray:
     return sky
 
 
-def __generate_upper_mine(y_max: int) -> TArray:
+def __generate_upper_mine() -> TArray:
     # For generating the upper part of the mine.
+    y_max = config.HEIGHT_MIN + 320
     mine = TArray(np.full((16, 16), 130), 2)
 
     dirt_co_ords = np.random.randint(16, size=(10, 2))
@@ -126,15 +129,15 @@ def __generate_upper_mine(y_max: int) -> TArray:
     return mine
 
 
-def __generate_middle_mine(y: int, y_max: int) -> TArray:
+def __generate_middle_mine(y: int, biome_code: int = None) -> TArray:
     # For generating the main part of the mine
+    y_max = config.HEIGHT_MIN + 320
     mine = TArray(np.full((16, 16), 130))
-
     coal_co_ords = np.random.randint(16, size=(7, 2))
     iron_co_ords = np.random.randint(16, size=(4, 2))
     diamond_co_ords = np.random.randint(16, size=(2, 2))
 
-    if y_max - 272 > y >= y_max - 288:
+    if y_max - 272 > y >= y_max - 288 or biome_code == 5:
         mine = __placer(choices((6, 7, 8, 9, 10, 11, 12), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
                         132, coal_co_ords, mine)
         mine = __placer(choices((4, 5, 6, 7, 8, 9, 10), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
@@ -144,7 +147,7 @@ def __generate_middle_mine(y: int, y_max: int) -> TArray:
 
         mine.adv_info[(y_max - 272, y_max - 288)] = 5
 
-    elif y_max - 192 >= y > y_max - 224:
+    elif y_max - 192 >= y > y_max - 224 or biome_code == 3:
         mine = __placer(choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
                         132, coal_co_ords, mine)
         mine = __placer(choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
@@ -152,7 +155,7 @@ def __generate_middle_mine(y: int, y_max: int) -> TArray:
 
         mine.adv_info[(y_max - 192, y_max - 224)] = 3
 
-    elif y_max - 224 >= y >= y_max - 272:
+    elif y_max - 224 >= y >= y_max - 272 or biome_code == 4:
         mine = __placer(choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
                         132, coal_co_ords, mine)
         mine = __placer(choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
@@ -168,50 +171,53 @@ def __generate_lower_mine(y_min: int) -> TArray:
     return mine
 
 
-def __gen_forest(y: int, y_max: int) -> TArray:
+def __gen_forest(y: int, biome_code: int = None) -> TArray:
     # For generating forest biome.
+    y_max = config.HEIGHT_MIN + 320
     tree_type = choice(('0x88', '0x8a', '0x8c'))
-    if y_max - 128 > y >= y_max - 160:
-        biome = TArray(np.full((16, 16), 131), 9)
+    if y_max - 128 > y >= y_max - 160 or biome_code == 8:
+        biome = TArray(np.full((16, 16), 131))
         biome.adv_info[(y_max - 128, y_max - 160)] = 8
     else:
-        biome = TArray(np.full((16, 16), 128), 9)
-        biome.adv_info[(y_max-80, y_max-128)] = 7
+        biome = TArray(np.full((16, 16), 128))
+        biome.adv_info[(y_max - 80, y_max - 128)] = 7
 
-    if y_max - 128 >= y > y_max - 144:
+    if y_max - 128 >= y > y_max - 144 or biome_code == 9:
         no_of_trees = randint(2, 3)
         for i in range(no_of_trees):
             biome[10:16, i + 2 + i * 3: i + 5 + i * 3] = __tree(tree_type)
-        biome.adv_info[(y_max-128, y_max-144)] = 9
+        biome.adv_info[(y_max - 128, y_max - 144)] = 9
 
     return biome
 
 
-def __gen_plain(y: int, y_max: int) -> TArray:
+def __gen_plain(y: int, biome_code: int = None) -> TArray:
     # For generating plains biome.
-    if y_max - 128 > y >= y_max - 160:
-        biome = TArray(np.full((16, 16), 131), 12)
+    y_max = config.HEIGHT_MIN + 320
+    if y_max - 128 > y >= y_max - 160 or biome_code == 1:
+        biome = TArray(np.full((16, 16), 131))
         biome.adv_info[(y_max - 128, y_max - 160)] = 11
-        if y == y_max - 144:
-            biome.adv_info[(y_max-144, y_max - 144)] = 12
+        if y == y_max - 144 or biome_code == 12:
+            biome.adv_info[(y_max - 144, y_max - 144)] = 12
             biome[0, :] = 155
     else:
-        biome = np.full((16, 16), 128)
-        biome.adv_info[(y_max-80, y_max-128)] = 10
+        biome = TArray(np.full((16, 16), 128))
+        biome.adv_info[(y_max - 80, y_max - 128)] = 10
 
     return biome
 
 
-def __gen_desert(y: int, y_max: int) -> TArray:
+def __gen_desert(y: int, biome_code: int = None) -> TArray:
     # For generating desert biome.
-    if y_max - 128 > y >= y_max - 160:
+    y_max = config.HEIGHT_MIN + 320
+    if y_max - 128 > y >= y_max - 160 or biome_code == 14:
         biome = TArray(np.full((16, 16), 152))
         biome.adv_info[(y_max - 128, y_max - 160)] = 14
     else:
         biome = np.full((16, 16), 128)
-        biome.adv_info[(y_max-80, y_max-128)] = 13
+        biome.adv_info[(y_max - 80, y_max - 128)] = 13
 
-    if y_max - 128 >= y > y_max - 144:
+    if y_max - 128 >= y > y_max - 144 or biome_code == 15:
         no_of_cactus = randint(1, 5)
         no_of_dead_bush = randint(2, 3)
         for i in range(no_of_dead_bush):
@@ -223,16 +229,17 @@ def __gen_desert(y: int, y_max: int) -> TArray:
     return biome
 
 
-def __gen_volcanoes(y: int, y_max: int) -> TArray:
+def __gen_volcanoes(y: int, biome_code: int = None) -> TArray:
     # For generating volcanic biome.
-    if y_max - 128 > y >= y_max - 160:
+    y_max = config.HEIGHT_MIN + 320
+    if y_max - 128 > y >= y_max - 160 or biome_code == 17:
         biome = TArray(np.full((16, 16), 146))
         biome.adv_info[(y_max - 128, y_max - 160)] = 17
     else:
         biome = TArray(np.full((16, 16), 128))
         biome.adv_info[(y_max - 80, y_max - 128)] = 16
 
-    if y_max - 128 >= y > y_max - 144:
+    if y_max - 128 >= y > y_max - 144 or biome_code == 18:
         volcano_w = choice((9, 11, 13))
         biome[16 - floor(volcano_w / 2) - 1:16, 2:2 + volcano_w] = __volcano(volcano_w)
         biome.adv_info[(y_max - 128, y_max - 144)] = 18
@@ -240,11 +247,12 @@ def __gen_volcanoes(y: int, y_max: int) -> TArray:
     return biome
 
 
-def __gen_jungles(y: int, y_max: int) -> TArray:
+def __gen_jungles(y: int, biome_code: int = None) -> TArray:
     # For generating jungle biome.
+    y_max = config.HEIGHT_MIN + 320
     jungle_tree_type = choice(('0x96', '0x94'))
 
-    if y_max - 128 > y >= y_max - 160:
+    if y_max - 128 > y >= y_max - 160 or biome_code == 20:
         biome = TArray(np.full((16, 16), 147))
         biome.adv_info[(y_max - 128, y_max - 160)] = 20
 
@@ -252,7 +260,7 @@ def __gen_jungles(y: int, y_max: int) -> TArray:
         biome = TArray(np.full((16, 16), 128))
         biome.adv_info[(y_max - 80, y_max - 128)] = 19
 
-    if y_max - 128 >= y > y_max - 144:
+    if y_max - 128 >= y > y_max - 144 or biome_code == 21:
         no_of_trees = randint(1, 2)
         for i in range(no_of_trees):
             biome[6:16, i + i * 5: i + 5 + i * 5] = __tree(jungle_tree_type, True)
@@ -317,15 +325,15 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
     for co_ords, _ in world.items():
         # generating sky
         if co_ords[3] >= y_max - 80:
-            world[co_ords] = __sky_gen(y_max)
+            world[co_ords] = __sky_gen()
 
         # generating upper mine
         elif y_max - 160 > co_ords[3] >= y_max - 192:
-            world[co_ords] = __generate_upper_mine(y_max)
+            world[co_ords] = __generate_upper_mine()
 
         # generating middle mine
         elif y_max - 192 > co_ords[3] >= y_max - 288:
-            world[co_ords] = __generate_middle_mine(co_ords[3], y_max)
+            world[co_ords] = __generate_middle_mine(co_ords[3])
 
         # generating lower mine
         elif co_ords[3] <= y_min + 16:
@@ -342,14 +350,28 @@ def gen_world(x_min: int = -192, x_max: int = 192, y_min: int = -160, y_max: int
             function: Callable[[int, int], TArray] = biomes[i][1]
 
             if biomes[i][1] == __gen_forest:
-                world[co_ords] = function(co_ords[3], y_max)
+                world[co_ords] = function(co_ords[3])
             elif biomes[i][1] == __gen_jungles:
-                world[co_ords] = function(co_ords[3], y_max)
+                world[co_ords] = function(co_ords[3])
             else:
-                world[co_ords] = function(co_ords[3], y_max)
+                world[co_ords] = function(co_ords[3])
             biomes[i][0] -= 1
 
     return world
+
+
+def gen_chunk(y: int, biome_code: int):
+    biomes = [__gen_forest, __gen_plain, __gen_desert, __gen_volcanoes, __gen_jungles]
+    if biome_code / 3 - 2 > 0:
+        return biomes[biome_code // 3 - 2](y, biome_code=biome_code)
+    else:
+        biomes = [__sky_gen, __generate_upper_mine, __generate_lower_mine]
+        if biome_code in (3, 4, 5):
+            return __generate_middle_mine(y, biome_code=biome_code)
+        elif biome_code == 6:
+            return biomes[2](config.HEIGHT_MIN)
+        else:
+            return biomes[biome_code - 1](config.HEIGHT_MIN + 320)
 
 
 if __name__ == '__main__':
