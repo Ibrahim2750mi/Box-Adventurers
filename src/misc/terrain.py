@@ -9,7 +9,7 @@ import numpy as np
 
 import config
 from utils import TArray
-from config import BiomeConstants, BlockConstants
+from constants import BiomeConstants, BlockConstants
 
 
 @cache
