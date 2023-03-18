@@ -255,14 +255,6 @@ class StartView(arcade.View):
         else:
             partial_frame = str(self.frameNum)
 
-        self.background = arcade.load_texture(config.ASSET_DIR / "images" / f"ezgif-frame-{partial_frame}.png")
-        arcade.draw_texture_rectangle(
-            config.SCREEN_WIDTH // 2,
-            config.SCREEN_HEIGHT // 2,
-            config.SCREEN_WIDTH,
-            config.SCREEN_HEIGHT,
-            self.background,
-        )
         # changing it to the next frame
         self.frameNum += 1
         if self.frameNum > self.maxFrames:
