@@ -13,8 +13,8 @@ specific objective in the game you can try reaching the world border.
 ## Contributions
 
 NHS (PyWeek Team)
-* BeautifulReques (Ibrahim2750mi): terrain generation, optimisation, graphics, chunk class
-* aph: graphics, block class, re-write 2.0
+* BeautifulReques (Ibrahim2750mi): terrain generation, optimisation, graphics, chunk system, re-write 2.0
+* aph: graphics, block class
 * redish2098: music, item class
 * Vthechamp: bug fixing and re-assesing the code
 * SReaperz: block breaking, player class, inventory, camera, entity class
@@ -25,10 +25,7 @@ Arcade
 
 ## BUGS
 
-* While in unloading chunks it gives error leading the game to crashing, reason
-  when we break a block it doesn't removes the block from the loaded chunk in
-  the list, didn't had time to solve this. Also a physical fix is that increasing
-  the `VISIBLE_RANGE_MAX` and `VISIBLE_RANGE_MIN` in config.py| (SOLVED)
+* Currently inventory gets full without being full.
 
 ## How to Run
 
