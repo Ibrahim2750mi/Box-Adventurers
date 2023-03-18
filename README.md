@@ -12,13 +12,16 @@ specific objective in the game you can try reaching the world border.
 
 ## Contributions
 
-* BeautifulReques: terrain generation, optimisation, graphics, chunk class
-* aph: graphics, block class
+NHS (PyWeek Team)
+* BeautifulReques (Ibrahim2750mi): terrain generation, optimisation, graphics, chunk class
+* aph: graphics, block class, re-write 2.0
 * redish2098: music, item class
 * Vthechamp: bug fixing and re-assesing the code
 * SReaperz: block breaking, player class, inventory, camera, entity class
 * jack_sparrow: start screen
-* einarf: optimising, re-writing everything
+
+Arcade
+* einarf: optimising, re-writing everything 1.0
 
 ## BUGS
 
