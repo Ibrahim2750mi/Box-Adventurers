@@ -1,12 +1,18 @@
 from arcade import Sprite
 
+from config import DEFAULT_PLAYER_HEALTH
 
 class Entity(Sprite):
     """Base class that all entities inherit from."""
 
     def __init__(
-            self, image_file: str, scale: float,
-            center_x: float, center_y: float, flipped_horizontally: bool) -> None:
+            self,
+            image_file: str,
+            scale: float,
+            center_x: float,
+            center_y: float,
+            health: float = DEFAULT_PLAYER_HEALTH,
+    ) -> None:
         """Initialize the Entity
 
         :param image_file: Path to the image file.
@@ -17,13 +23,11 @@ class Entity(Sprite):
         :type center_x: float
         :param center_y: Entity's y coordinate.
         :type center_y: float
-        :param flipped_horizontally: Should the entity sprite be flipped.
-        :type flipped_horizontally: bool
         """
         super().__init__(
-            filename=image_file,
+            image_file,
             scale=scale,
             center_x=center_x,
             center_y=center_y,
-            flipped_horizontally=flipped_horizontally
         )
+        self.health = health
