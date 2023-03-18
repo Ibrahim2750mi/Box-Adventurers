@@ -1,116 +1,283 @@
+from typing import Optional, Tuple
+
 import arcade
-from arcade import color
+import arcade.gui
+from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
-from block.block import Block
-from config import (GRAVITY, JUMP_SPEED, MOVEMENT_SPEED, SCREEN_HEIGHT,
-                    SCREEN_TITLE, SCREEN_WIDTH, SPRITE_PIXEL_SIZE,
-                    SPRITE_SCALING,)
-from entities.player import Player
-from misc.camera import CustomCamera
-from misc.terrain import gen_world
+from misc.item import Item
+from world import World
+import config
 
 
-class Game(arcade.Window):
+class Game(arcade.View):
     """Base game class"""
 
-    def __init__(self, width: int, height: int, title: str) -> None:
+    def __init__(self) -> None:
         """Initializer"""
-        super().__init__(width, height, title, resizable=True)
+        super().__init__()
 
-        # Initialising arguments
-        self.physics_engine: arcade.PhysicsEnginePlatformer = None
-        self.block_list: arcade.SpriteList = None
-        self.background_list: arcade.SpriteList = None
-        self.player_list: arcade.SpriteList = None
-        self.player_sprite: Player = None
-        self.camera: CustomCamera = None
+        self.bg_music: Optional[arcade.Sound] = None
+        self.break_cooldown = False
+        self.place_cooldown = False
+        self.hud_camera = arcade.Camera(*self.window.get_size())
+        self.world = World(screen_size=self.window.get_size(), name="default")
 
-    def setup(self) -> None:
-        """Set up the game and initialize the variables."""
+        # Block selection position
+        self.bx = None
+        self.by = None
+        self.b_color = color.RED
 
-        self.setup_world()
-        self.setup_player()
+        # TODO: Is this necessary?
+        self.world.player.inventory.setup_coords((0, 0))
 
-        self.camera = CustomCamera(self.width, self.height, self)
+        if config.MUSIC:
+            self.bg_music = arcade.Sound(
+                config.ASSET_DIR / "music" / "main_game_tune.wav"
+            )
+            self.bg_music.play(loop=True)
 
-        self.physics_engine: arcade.PhysicsEnginePlatformer = arcade.PhysicsEnginePlatformer(self.player_sprite,
-                                                                                             [self.block_list],
-                                                                                             gravity_constant=GRAVITY)
-
-        arcade.set_background_color(color.AMAZON)
-
-        self.view_left: int = 0
-        self.view_bottom: int = 0
-
-        self.game_over: bool = False
-
-    def setup_world(self):
-        self.block_list = arcade.SpriteList()
-        self.background_list = arcade.SpriteList()
-        world = gen_world(-160, 160, 0, 320)
-        for k, chunk in world.items():
-            for inc_y, chunk_row in enumerate(chunk):
-                for inc_x, block in enumerate(chunk_row):
-                    if block > 129:
-                        self.block_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block, False,
-                                                     center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
-                                                     center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
-                    else:
-                        self.background_list.append(Block(SPRITE_PIXEL_SIZE, SPRITE_PIXEL_SIZE, 2, 2, block,
-                                                          False, center_x=(k[0] - inc_x) * SPRITE_PIXEL_SIZE,
-                                                          center_y=(k[2] - inc_y) * SPRITE_PIXEL_SIZE))
-
-    def setup_player(self):
-        self.player_list = arcade.SpriteList()
-
-        # Set up the player
-        self.player_sprite = Player("player",
-                                    SPRITE_SCALING, 0, 3112, SCREEN_WIDTH,
-                                    SCREEN_HEIGHT, MOVEMENT_SPEED, JUMP_SPEED, False)
-        self.player_list.append(self.player_sprite)
+    def setup(self):
+        self.world.create()
 
     def on_draw(self) -> None:
-        """
-        Render the screen.
-        """
-        # This command has to happen before we start drawing
-        arcade.start_render()
+        self.window.clear()
 
-        # Draw the sprites.
-        self.background_list.draw()
-        self.block_list.draw()
-        self.player_list.draw()
+        self.world.draw()
 
-        self.camera.use()
-        # Show distance at bottom left of the screen.
-        distance = self.player_sprite.right
-        output = f"Distance: {distance}"
-        arcade.draw_text(output, self.view_left + 10, self.view_bottom + 20, color.WHITE, 14)
+        # Draw the block selection
+        if self.bx is not None and self.by is not None:
+            arcade.draw_rectangle_outline(self.bx, self.by, 20, 20, self.b_color, 1)
 
-    def on_key_press(self, key: int, modifiers: int) -> None:
-        """
-        Called whenever the mouse moves.
-        """
-        self.player_sprite.on_key_press(key, modifiers, self.physics_engine.can_jump())
-
-    def on_key_release(self, key: int, modifiers: int) -> None:
-        """
-        Called when the user presses a mouse button.
-        """
-        self.player_sprite.on_key_release(key, modifiers)
+        self.hud_camera.use()
+        self.world.player.inventory.smart_draw()
 
     def on_update(self, delta_time: float) -> None:
-        """ Movement and game logic """
+        """Movement and game logic."""
+        # print(delta_time)
+        self.world.update()
+        self.world.player.inventory.update()
+        # We created the window with gc_mode="context_gc" and must
+        # manually garbage collect OpenGL resources (if any)
+        num_deleted = self.window.ctx.gc()
+        # Notify us when resources are deleted
+        if num_deleted:
+            print(f"Arcade garbage collector deleted {num_deleted} OpenGL resources")
 
-        self.physics_engine.update()
-        self.camera.center_camera_to_player(self.player_sprite)
-        print(self.player_sprite.center_y, self.player_sprite.center_x)
+    def on_key_press(self, key: int, modifiers: int) -> None:
+        """Called when keyboard is pressed"""
+        self.world.player.on_key_press(key, modifiers)
+        self.world.player.inventory.change_slot_keyboard(key)
+
+    def on_key_release(self, key: int, modifiers: int) -> None:
+        """Called when keyboard is released"""
+        self.world.player.on_key_release(key, modifiers)
+
+    def on_mouse_motion(self, x, y, dx, dy):
+        world_x, world_y = self.screen_to_world_position(x, y)
+        block = self.world.get_block_at_world_position(world_x, world_y)
+
+        # Only show the marker when there is a valid block selection.
+        self.bx, self.by = world_x, world_y
+        if block and self.world.player.distance_to_block(block) < config.PLAYER_BLOCK_REACH:
+            self.b_color = color.GREEN
+        elif block:
+            self.b_color = color.WHITE
+        else:
+            self.b_color = color.RED
+
+    def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
+        player = self.world.player
+        world_x, world_y = self.screen_to_world_position(x, y)
+        print(player.center_y, world_y, player.center_x, world_x)
+        block = self.world.get_block_at_world_position(world_x, world_y)
+
+        if button == MOUSE_BUTTON_LEFT:
+            # NOTE: This can be improved later with can_break(block) looking at other game states
+            if block and self.world.block_break_check(block, world_x, world_y):
+                self.world.remove_block(block)
+                player.inventory.add(Item(True, block.block_id))
+        elif button == MOUSE_BUTTON_RIGHT and not self.place_cooldown:
+            if block:
+                return
+            self.world.place_block(world_x, world_y)
+
+    def on_mouse_scroll(self, x: int, y: int, scroll_x: int, scroll_y: int):
+        self.world.player.inventory.change_slot_mouse(scroll_y)
+
+    def on_mouse_release(self, x: float, y: float, button: int, modifiers: int):
+        """ Called when the user presses a mouse button. """
+        if button == MOUSE_BUTTON_LEFT:
+            self.break_cooldown = False
+        if button == MOUSE_BUTTON_RIGHT:
+            self.place_cooldown = False
+
+    def on_resize(self, width, height):
+        self.hud_camera.resize(width, height)
+        self.world.camera.resize(width, height)
+
+    def screen_to_world_position(self, screen_x: float = 0, screen_y: float = 0) -> Tuple[float, float]:
+        """
+        Convert screen to world position.
+        This is normally used to convert mouse coordinates.
+        """
+        return (
+            screen_x + self.world.camera.position[0],
+            screen_y + self.world.camera.position[1],
+        )
 
 
-def main() -> None:
-    """ Main function """
-    window = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
-    window.setup()
+# --- Method 1 for handling click events,
+# Create a child class.
+class QuitButton(arcade.gui.UIFlatButton):
+    def on_click(self, event: arcade.gui.UIOnClickEvent):
+        arcade.exit()
+
+
+class LoadingScreen(arcade.View):
+    def __init__(self):
+        super().__init__()
+        self.frames = 0
+        self.text = "Loading World"
+        self.game_view = None
+        self.angle = 0
+        self.frame = 0
+        self.done_loading = False
+
+    def on_show(self):
+        arcade.set_background_color(color.BLACK)
+
+    def on_draw(self):
+        self.window.clear()
+        # On frame 0 we render the loading screen so this happens instantly
+        # On frame 1 we crate the game object and the loading iterator
+        # From frame 2 we invoke loading loading steps until done 
+        if self.frame > 1:
+            # Run until all visible chunks are loaded
+            self.game_view.world.process_new_chunks()
+            self.done_loading, _ = self.game_view.world.update_visible_chunks()
+
+            # Trigger next loading step
+            self.angle += 5
+
+        arcade.draw_text(
+            self.text,
+            self.window.width / 2,
+            self.window.height / 2 + 30,
+            color=color.WHITE,
+            anchor_x="center",
+        )
+        arcade.draw_rectangle_filled(
+            self.window.width / 2,  # x
+            self.window.height / 2 - 30,  # y
+            50,
+            50,
+            arcade.color.WHITE,
+            self.angle,
+        )
+
+    def on_update(self, delta_time: float):
+        if self.frame == 1:
+            self.game_view = Game()
+            self.game_view.setup()
+
+        # Loading is done. Show the game view (Will happen in next frame)
+        if self.done_loading:
+            self.window.show_view(self.game_view)
+
+        self.frame += 1
+
+
+class StartView(arcade.View):
+    def __init__(self):
+        super().__init__()
+
+        # --- Required for all code that uses UI element,
+        # a UIManager to handle the UI.
+        self.manager = arcade.gui.UIManager()
+        # Enable UI events
+        self.manager.enable()
+
+        # Set background color
+        # arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
+        self.background = None
+        self.frameNum = 1
+        self.maxFrames = 1  # 155
+
+        # Create a vertical BoxGroup to align buttons
+        self.v_box = arcade.gui.UIBoxLayout()
+
+        # Create the buttons
+        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style={
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(start_button.with_space_around(bottom=20))
+
+        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style={
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(settings_button.with_space_around(bottom=20))
+
+        # Again, method 1. Use a child class to handle events.
+        quit_button = QuitButton(text="Quit", width=200, style={
+            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        self.v_box.add(quit_button)
+
+        # --- Method 2 for handling click events,
+        # assign self.on_click_start as callback
+        start_button.on_click = self.on_click_start
+
+        # --- Method 3 for handling click events,
+        # use a decorator to handle on_click events
+        @settings_button.event("on_click")
+        def on_click_settings(event):
+            print("Settings:", event)
+
+        # Create a widget to hold the v_box widget, that will center the buttons
+        self.manager.add(
+            arcade.gui.UIAnchorWidget(
+                anchor_x="center_x",
+                anchor_y="center_y",
+                child=self.v_box)
+        )
+
+    def on_click_start(self, _):
+        self.window.show_view(LoadingScreen())
+
+    def on_draw(self):
+        self.window.clear()
+
+        # background gif
+        # showing the background image
+        if len(str(self.frameNum)) == 1:
+            partial_frame = "00" + str(self.frameNum)
+        elif len(str(self.frameNum)) == 2:
+            partial_frame = "0" + str(self.frameNum)
+        else:
+            partial_frame = str(self.frameNum)
+
+        self.background = arcade.load_texture(config.ASSET_DIR / "images" / f"ezgif-frame-{partial_frame}.png")
+        arcade.draw_texture_rectangle(
+            config.SCREEN_WIDTH // 2,
+            config.SCREEN_HEIGHT // 2,
+            config.SCREEN_WIDTH,
+            config.SCREEN_HEIGHT,
+            self.background,
+        )
+        # changing it to the next frame
+        self.frameNum += 1
+        if self.frameNum > self.maxFrames:
+            self.frameNum = 1
+
+        self.manager.draw()
+
+    def on_hide_view(self):
+        """Disable the UI events"""
+        self.manager.disable()
+
+
+def main():
+    """ Main method """
+    window = arcade.Window(config.SCREEN_WIDTH, config.SCREEN_HEIGHT, config.SCREEN_TITLE, gc_mode="context_gc",
+                           resizable=True)
+    window.show_view(StartView())
     arcade.run()
 
 
