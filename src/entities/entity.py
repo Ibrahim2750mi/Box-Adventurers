@@ -21,7 +21,7 @@ class Entity(Sprite):
         :type flipped_horizontally: bool
         """
         super().__init__(
-            filename=image_file,
+            image_file,
             scale=scale,
             center_x=center_x,
             center_y=center_y,

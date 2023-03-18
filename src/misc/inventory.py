@@ -16,7 +16,7 @@ class InventoryFullError(Exception):
 class Inventory(Sprite):
     def __init__(self) -> None:
         super().__init__(
-            filename=config.ASSET_DIR / "sprites" / "inventory.png",
+            config.ASSET_DIR / "sprites" / "inventory.png",
             center_x=0,
             center_y=0,
             scale=config.INVENTORY_SCALING,
@@ -56,7 +56,7 @@ class Inventory(Sprite):
         raise InventoryFullError
 
     def smart_draw(self):
-        self.draw(pixelated=True)
+        self.draw()
         for slot, item in self.slots.items():
             if slot == self.selected_slot:
                 self.draw_outline(slot)

@@ -1,3 +1,2 @@
-# arcade ~= 2.6
--e git://github.com/pythonarcade/arcade#egg=arcade
-numpy  ~= 1.21
+https://github.com/pythonarcade/arcade/archive/refs/heads/development.zip
+numpy  ~= 1.24

@@ -1,8 +1,11 @@
 from time import perf_counter
-from typing import Optional, Tuple
 
 import numpy as np
 import numpy.typing as npt
+
+
+class WorldLoadingException(Exception):
+    pass
 
 
 class Timer:
@@ -20,8 +23,8 @@ class Timer:
 
 
 class TArray:
-    def __init__(self, arr: Optional[np.NDarray[np.int_]] = None, info: int = None):
-        self.arr = arr or {}
+    def __init__(self, arr: npt.NDArray[np.int_], info: int = None):
+        self.arr = arr
         self.info = info
         self.adv_info = {}
 

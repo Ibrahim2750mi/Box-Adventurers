@@ -57,7 +57,7 @@ class World:
         # Visible chunks
         self._active_chunks: deque = deque()
 
-        self.camera = CustomCamera(*self._screen_size)
+        self.camera = CustomCamera()
 
         # Chunk loader
         self._chunk_loader = ChunkLoader()
@@ -68,14 +68,13 @@ class World:
         return self._player_sprite
 
     def draw(self):
-        arcade.set_background_color(arcade.color.AMAZON)
         self.camera.use()
 
         for chunk in self._active_chunks:
             chunk.draw()
 
-        self._player_list.draw(pixelated=True)
-        self.debug_draw_chunks()
+        self._player_list.draw()
+        # self.debug_draw_chunks()
 
     def update(self):
         """Called every frame to update the world state"""
@@ -84,7 +83,7 @@ class World:
         self.process_new_chunks()
 
         if self._player_sprite.center_y < -100:
-            self._player_sprite.set_position(self._player_default_x, self._player_default_y)
+            self._player_sprite.position = (self._player_default_x, self._player_default_y)
 
         self._physics_engine.update()
         self._player_list.update_list()
@@ -220,7 +219,7 @@ class World:
                 arcade.color.RED,
             )
 
-    def get_chunk_at_world_position(self, x, y) -> Optional[HorizontalChunk]:
+    def get_chunk_at_world_position(self, x, _y) -> Optional[HorizontalChunk]:
         """Get a chunk at a wold position"""
         return self._whole_world.get((x + config.SPRITE_PIXEL_SIZE / 2) // 320)
 
@@ -313,9 +312,12 @@ class ChunkLoader:
 
     def start(self):
         """Start the thread if not already started"""
-        if not self.thread.is_alive():
-            print("Starting chunk loader thread")
-            self.thread.start()
+        try:
+            if not self.thread.is_alive():
+                print("Starting chunk loader thread")
+                self.thread.start()
+        except RuntimeError:
+            pass
 
     def _run(self):
         while True:

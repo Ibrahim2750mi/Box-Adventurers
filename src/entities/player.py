@@ -3,7 +3,7 @@ from abc import ABC
 from enum import Enum
 from typing import Optional
 
-from arcade import key, load_texture
+from arcade import key, load_texture_pair
 import arcade
 
 from entities.entity import Entity
@@ -64,8 +64,7 @@ class Player(Entity):
         self.direction: Optional[Direction] = None
         self.last_faced_dir = "left"
         self.textures = []
-        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png",))
-        self.textures.append(load_texture(config.ASSET_DIR / "mobs" / f"{image_file}.png", flipped_horizontally=True))
+        self.textures.extend(load_texture_pair(config.ASSET_DIR / "mobs" / f"{image_file}.png"))
         self._physics_engine: arcade.PhysicsEnginePlatformer = None
         self.inventory = Inventory()
 
@@ -130,7 +129,7 @@ class Player(Entity):
 
 class PlayerSpriteList(arcade.SpriteList, ABC):
     def __init__(self, player: Player):
-        super(PlayerSpriteList, self).__init__()
+        super(PlayerSpriteList, self).__init__(lazy=True)
         self.player = player
         self.append(player)
 
