@@ -3,13 +3,20 @@ from typing import Any, List, Tuple
 
 import arcade
 
-from src.constants import SPRITE_SCALING
-from src.misc.item import Item
+from config import SPRITE_SCALING
+from entities.entity import Entity
+from misc.item import Item
 
 
-class Mob(arcade.Sprite):
-    def __init__(self: Any, health: int, drops: List[Tuple[int, int]]) -> None:
-        self.health = health
+class Mob(Entity):
+    def __init__(self, image_file: str, health: int, drops: List[Tuple[int, int]], x: int, y: int) -> None:
+        super().__init__(
+            image_file,
+            scale=SPRITE_SCALING,
+            center_x=x,
+            center_y=y,
+            health=health,
+        )
         self.drops = drops
 
     def random_move(self: Any) -> None:
@@ -23,8 +30,11 @@ class Cow(Mob):
     def __init__(self: Any, x: int, y: int, health: int) -> None:
 
         super().__init__(
+            "assets/mobs/cow.png",
             health,
-            [(random.randint(1, 4), 300), (random.randint(1, 3), 301)]
+            [(random.randint(1, 4), 300), (random.randint(1, 3), 301)],
+            x,
+            y,
         )
         arcade.Sprite.__init__(
             self, "assets/mobs/cow.png", SPRITE_SCALING, center_x=x, center_y=y
@@ -33,23 +43,23 @@ class Cow(Mob):
 
 class Sheep(Mob):
     def __init__(self: Any, x: int, y: int, health: int) -> None:
-
         super().__init__(
-            health, [(random.randint(1, 4), 302), (random.randint(1, 3), 303)]
-        )
-        arcade.Sprite.__init__(
-            self, "assets/mobs/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
+            "assets/mobs/sheep.png",
+            health,
+            [(random.randint(1, 4), 302), (random.randint(1, 3), 303)],
+            x,
+            y,
         )
 
 
 class Chicken(Mob):
     def __init__(self: Any, x: int, y: int, health: int) -> None:
-
         super().__init__(
-            health, [(random.randint(1, 4), 303), (random.randint(1, 2), 304)]
-        )
-        arcade.Sprite.__init__(
-            self, "assets/mobs/sheep.png", SPRITE_SCALING, center_x=x, center_y=y
+            "assets/mobs/sheep.png",
+            health,
+            [(random.randint(1, 4), 303), (random.randint(1, 2), 304)],
+            x,
+            y,
         )
 
 
