@@ -25,7 +25,8 @@ Arcade
 
 ## BUGS
 
-* Currently inventory gets full without being full.
+* Currently, inventory gets full without being full.
+* Sometimes the immediate block doesn't break. 
 
 ## How to Run
 
