@@ -29,7 +29,8 @@ specific objective in the game you can try reaching the world border.
 
 ## How to Run
 
-After installing the libs in `requirements.txt` do `python src/game.py`
+After installing the libs in `requirements.txt` do `python src/game.py`.
+Currently, if there isn't game data present in data folder you have to run the game two times.
 
 ## Notes
 

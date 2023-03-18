@@ -1,5 +1,6 @@
 import dataclasses
 
+
 @dataclasses.dataclass
 class BlockConstants:
     sky = 128
@@ -30,6 +31,7 @@ class BlockConstants:
     cactus = 153
     dead_bush = 154
     grass = 155
+
 
 @dataclasses.dataclass
 class BiomeConstants:

@@ -1,20 +1,21 @@
 import gzip
 import pickle
+import threading
+import time
 from collections import deque
 from math import atan, pi
-import time
-from typing import Optional, Tuple, Set
-import threading
 from queue import Empty, Queue
+from typing import Optional, Set, Tuple
 
 import arcade
-from entities.player import Player, PlayerSpriteList
+
+import config
 from block.block import Block
+from entities.player import Player, PlayerSpriteList
 from misc.camera import CustomCamera
+from misc.chunk import HorizontalChunk
 from misc.terrain import gen_world
 from utils import Timer
-from misc.chunk import HorizontalChunk
-import config
 
 
 class World:
@@ -74,7 +75,7 @@ class World:
             chunk.draw()
 
         self._player_list.draw()
-        # self.debug_draw_chunks()
+        self.debug_draw_chunks()
 
     def update(self):
         """Called every frame to update the world state"""
@@ -241,11 +242,11 @@ class World:
         block_id = self._player_sprite.inventory.get_selected_item_id_and_remove()
         if not block_id:
             return
-        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
+        self._whole_world[int((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
 
     def remove_block(self, block: Block):
         x = block.center_x
-        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].remove(block)
+        self._whole_world[int((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].remove(block)
 
     @property
     def whole_world(self):

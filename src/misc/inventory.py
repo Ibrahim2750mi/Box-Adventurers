@@ -4,8 +4,8 @@ import arcade.key
 from arcade import Sprite
 from pyglet.math import Vec2
 
-from misc.item import Item
 import config
+from misc.item import Item
 
 
 class InventoryFullError(Exception):
@@ -28,7 +28,7 @@ class Inventory(Sprite):
 
     def add(self, item: Item) -> None:
         if self.filled_slots == self.max_slots:
-            raise InventoryFullError
+            return
         added = False
         if item.stackable:
             for i in range(len(self.slots), 0, -1):
@@ -109,5 +109,5 @@ class Inventory(Sprite):
         rx = self.center_x - (self.width / 2) + config.INVENTORY_SCALING * 15 \
             + ((rw + config.INVENTORY_SCALING) * (slot - 1))
         ry = self.center_y - (self.height / 2) + 2 + config.INVENTORY_SCALING * 29/3
-        arcade.draw_rectangle_outline(center_x=rx, center_y=ry, width=rw, height=rw, color=
-                                      (200, 200, 200), border_width=4)
+        arcade.draw_rectangle_outline(center_x=rx, center_y=ry, width=rw, height=rw, color=(200, 200, 200),
+                                      border_width=4)

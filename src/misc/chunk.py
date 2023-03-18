@@ -5,9 +5,9 @@ from typing import Any, Dict, Optional
 import arcade
 import numpy as np
 
-from block.block import Block
 import config
 import utils
+from block.block import Block
 
 
 class HorizontalChunk:
@@ -135,7 +135,10 @@ class HorizontalChunk:
         self._block_add(new_block)
 
     def add(self, center_x, center_y, block_id):
-        block = self._block_data.get((center_x // config.SPRITE_PIXEL_SIZE, center_y // config.SPRITE_PIXEL_SIZE))
+        block = self._block_data.get((
+            center_x // config.SPRITE_PIXEL_SIZE - self.x,
+            center_y // config.SPRITE_PIXEL_SIZE,
+        ))
         if not block:
             return
         block.remove_from_sprite_lists()

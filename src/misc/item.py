@@ -1,5 +1,6 @@
-from arcade import Sprite, draw_text, draw_rectangle_outline
+from arcade import Sprite, draw_text
 from arcade.csscolor import WHITE
+
 import config
 
 

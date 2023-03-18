@@ -3,12 +3,12 @@ from abc import ABC
 from enum import Enum
 from typing import Optional
 
-from arcade import key, load_texture_pair
 import arcade
+from arcade import key, load_texture_pair
 
+import config
 from entities.entity import Entity
 from misc.inventory import Inventory
-import config
 
 
 class Direction(Enum):

@@ -4,9 +4,9 @@ import arcade
 import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
+import config
 from misc.item import Item
 from world import World
-import config
 
 
 class Game(arcade.View):
@@ -149,7 +149,7 @@ class LoadingScreen(arcade.View):
         self.window.clear()
         # On frame 0 we render the loading screen so this happens instantly
         # On frame 1 we crate the game object and the loading iterator
-        # From frame 2 we invoke loading loading steps until done 
+        # From frame 2 we invoke loading steps until done.
         if self.frame > 1:
             # Run until all visible chunks are loaded
             self.game_view.world.process_new_chunks()
@@ -249,11 +249,11 @@ class StartView(arcade.View):
         # background gif
         # showing the background image
         if len(str(self.frameNum)) == 1:
-            partial_frame = "00" + str(self.frameNum)
+            "00" + str(self.frameNum)
         elif len(str(self.frameNum)) == 2:
-            partial_frame = "0" + str(self.frameNum)
+            "0" + str(self.frameNum)
         else:
-            partial_frame = str(self.frameNum)
+            str(self.frameNum)
 
         # changing it to the next frame
         self.frameNum += 1

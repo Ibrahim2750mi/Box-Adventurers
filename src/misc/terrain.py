@@ -8,8 +8,8 @@ from typing import Deque, Dict, Tuple
 import numpy as np
 
 import config
-from utils import TArray
 from constants import BiomeConstants, BlockConstants
+from utils import TArray
 
 
 @cache
@@ -35,7 +35,14 @@ def _volcano(volcano_w: int) -> np.ndarray:
     volcano = np.zeros((volcano_h, volcano_w))
     for i in range(volcano_h):
         volcano[floor(n_factor) - i, 0 + i:volcano_w - i] = BiomeConstants.sky
-    volcano[volcano == 1] = np.random.choice([BlockConstants.pumice, BlockConstants.basalt, BlockConstants.obsidian, BlockConstants.molten_rock], p=[0.1, 0.5, 0.1, 0.3], size=volcano_h ** 2)
+    volcano[volcano == 1] = np.random.choice([
+        BlockConstants.pumice,
+        BlockConstants.basalt,
+        BlockConstants.obsidian,
+        BlockConstants.molten_rock],
+        p=[0.1, 0.5, 0.1, 0.3],
+        size=volcano_h ** 2
+    )
     volcano[volcano == 0] = 128
     return volcano
 
@@ -80,28 +87,56 @@ def _generate_middle_mine(y: int, biome_code: int = None) -> TArray:
     diamond_co_ords = np.random.randint(16, size=(2, 2))
 
     if y_max - 272 > y >= y_max - 288 or biome_code == 5:
-        mine = _placer(choices((6, 7, 8, 9, 10, 11, 12), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.coal, coal_co_ords, mine)
-        mine = _placer(choices((4, 5, 6, 7, 8, 9, 10), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.iron, iron_co_ords, mine)
-        mine = _placer(choices((2, 3, 4, 5, 6, 7, 8), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.diamond, diamond_co_ords, mine)
+        mine = _placer(
+            choices((6, 7, 8, 9, 10, 11, 12), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.coal,
+            coal_co_ords,
+            mine
+        )
+        mine = _placer(
+            choices((4, 5, 6, 7, 8, 9, 10), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.iron,
+            iron_co_ords,
+            mine
+        )
+        mine = _placer(
+            choices((2, 3, 4, 5, 6, 7, 8), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.diamond,
+            diamond_co_ords,
+            mine
+        )
 
         mine.adv_info[(y_max - 272, y_max - 288)] = BiomeConstants.middle_mine_3
 
     elif y_max - 192 >= y > y_max - 224 or biome_code == 3:
-        mine = _placer(choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.coal, coal_co_ords, mine)
-        mine = _placer(choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.iron, iron_co_ords, mine)
+        mine = _placer(
+            choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.coal,
+            coal_co_ords,
+            mine
+        )
+        mine = _placer(
+            choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.iron,
+            iron_co_ords,
+            mine
+        )
 
         mine.adv_info[(y_max - 192, y_max - 224)] = BiomeConstants.middle_mine_1
 
     elif y_max - 224 >= y >= y_max - 272 or biome_code == 4:
-        mine = _placer(choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.coal, coal_co_ords, mine)
-        mine = _placer(choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
-                        BlockConstants.iron, iron_co_ords, mine)
+        mine = _placer(
+            choices((7, 8, 9, 10, 11, 12, 13), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.coal,
+            coal_co_ords,
+            mine
+        )
+        mine = _placer(
+            choices((10, 11, 12, 13, 14, 15, 16), (0.3, 0.3, 0.1, 0.1, 0.08, 0.09, 0.03), k=1)[0],
+            BlockConstants.iron,
+            iron_co_ords,
+            mine
+        )
         mine.adv_info[(y_max - 224, y_max - 272)] = BiomeConstants.middle_mine_2
 
     return mine
@@ -210,9 +245,7 @@ def _gen_jungles(y: int, biome_code: int = None) -> TArray:
     return biome
 
 
-def _placer(range_: int, block_id: int, co_ords_arr: TArray,
-             main: TArray
-             ) -> TArray:
+def _placer(range_: int, block_id: int, co_ords_arr: TArray, main: TArray,) -> TArray:
     # For adding chain of blocks to a chunk.
     main_arr = main.arr
     for co_ord_arr in co_ords_arr:
@@ -315,6 +348,7 @@ def gen_chunk(y: int, biome_code: int):
             return biomes[2](config.HEIGHT_MIN)
         else:
             return biomes[biome_code - 1](config.HEIGHT_MIN + 320)
+
 
 if __name__ == '__main__':
     generated_world = gen_world(-496, 496)

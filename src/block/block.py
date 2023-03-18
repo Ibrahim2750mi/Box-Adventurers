@@ -3,8 +3,8 @@ from typing import Optional
 
 import arcade
 
-from misc.item import Item
 import config
+from misc.item import Item
 
 BREAK_TEXTURES = [arcade.load_texture(path) for path in (config.ASSET_DIR / "animations").iterdir()]
 BLOCK_TEXTURES = {
