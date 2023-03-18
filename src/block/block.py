@@ -3,8 +3,8 @@ from typing import Optional
 
 import arcade
 
-from misc.item import Item
 import config
+from misc.item import Item
 
 BREAK_TEXTURES = [arcade.load_texture(path) for path in (config.ASSET_DIR / "animations").iterdir()]
 BLOCK_TEXTURES = {
@@ -28,15 +28,10 @@ class Block(arcade.Sprite):
         **kwargs
     ):
         super().__init__(
-            texture=BLOCK_TEXTURES[block_id],
+            BLOCK_TEXTURES[block_id],
             scale=scale,
             center_x=center_x,
             center_y=center_y,
-            image_width=width,
-            image_height=height,
-            hit_box_algorithm="None",
-            *args,
-            **kwargs
         )
         # self.place_sound = place_sound
         # arcade.Sound(place_sound).play()

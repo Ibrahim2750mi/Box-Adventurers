@@ -2,6 +2,7 @@ from arcade import Sprite
 
 from config import DEFAULT_PLAYER_HEALTH
 
+
 class Entity(Sprite):
     """Base class that all entities inherit from."""
 

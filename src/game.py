@@ -4,9 +4,9 @@ import arcade
 import arcade.gui
 from arcade import MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, color
 
+import config
 from misc.item import Item
 from world import World
-import config
 
 
 class Game(arcade.View):
@@ -19,7 +19,7 @@ class Game(arcade.View):
         self.bg_music: Optional[arcade.Sound] = None
         self.break_cooldown = False
         self.place_cooldown = False
-        self.hud_camera = arcade.Camera(*self.window.get_size())
+        self.hud_camera = arcade.Camera()
         self.world = World(screen_size=self.window.get_size(), name="default")
 
         # Block selection position
@@ -40,7 +40,7 @@ class Game(arcade.View):
         self.world.create()
 
     def on_draw(self) -> None:
-        self.window.clear()
+        self.clear()
 
         self.world.draw()
 
@@ -88,7 +88,6 @@ class Game(arcade.View):
     def on_mouse_press(self, x: float, y: float, button: int, key_modifiers: int) -> None:
         player = self.world.player
         world_x, world_y = self.screen_to_world_position(x, y)
-        print(player.center_y, world_y, player.center_x, world_x)
         block = self.world.get_block_at_world_position(world_x, world_y)
 
         if button == MOUSE_BUTTON_LEFT:
@@ -150,7 +149,7 @@ class LoadingScreen(arcade.View):
         self.window.clear()
         # On frame 0 we render the loading screen so this happens instantly
         # On frame 1 we crate the game object and the loading iterator
-        # From frame 2 we invoke loading loading steps until done 
+        # From frame 2 we invoke loading steps until done.
         if self.frame > 1:
             # Run until all visible chunks are loaded
             self.game_view.world.process_new_chunks()
@@ -194,8 +193,6 @@ class StartView(arcade.View):
         # --- Required for all code that uses UI element,
         # a UIManager to handle the UI.
         self.manager = arcade.gui.UIManager()
-        # Enable UI events
-        self.manager.enable()
 
         # Set background color
         # arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
@@ -207,17 +204,22 @@ class StartView(arcade.View):
         self.v_box = arcade.gui.UIBoxLayout()
 
         # Create the buttons
-        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style={
-            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
-        self.v_box.add(start_button.with_space_around(bottom=20))
+        button_style = arcade.gui.UIFlatButton.UIStyle(bg=(0, 0, 60, 255))
+        button_style_dict = {
+            "normal": button_style,
+            "hover": button_style,
+            "press": button_style,
+            "disabled": button_style,
+        }
 
-        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style={
-            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
-        self.v_box.add(settings_button.with_space_around(bottom=20))
+        start_button = arcade.gui.UIFlatButton(text="Start Game", width=200, style=button_style_dict)
+        self.v_box.add(start_button.with_padding(bottom=20))
+
+        settings_button = arcade.gui.UIFlatButton(text="Settings", width=200, style=button_style_dict)
+        self.v_box.add(settings_button.with_padding(bottom=20))
 
         # Again, method 1. Use a child class to handle events.
-        quit_button = QuitButton(text="Quit", width=200, style={
-            "bg_color": arcade.get_four_byte_color((0, 0, 60, 200))})
+        quit_button = QuitButton(text="Quit", width=200, style=button_style_dict)
         self.v_box.add(quit_button)
 
         # --- Method 2 for handling click events,
@@ -231,11 +233,11 @@ class StartView(arcade.View):
             print("Settings:", event)
 
         # Create a widget to hold the v_box widget, that will center the buttons
-        self.manager.add(
-            arcade.gui.UIAnchorWidget(
-                anchor_x="center_x",
-                anchor_y="center_y",
-                child=self.v_box)
+        anchor = arcade.gui.UIAnchorLayout()
+        self.manager.add(anchor)
+
+        anchor.add(
+            child=self.v_box
         )
 
     def on_click_start(self, _):
@@ -247,20 +249,12 @@ class StartView(arcade.View):
         # background gif
         # showing the background image
         if len(str(self.frameNum)) == 1:
-            partial_frame = "00" + str(self.frameNum)
+            "00" + str(self.frameNum)
         elif len(str(self.frameNum)) == 2:
-            partial_frame = "0" + str(self.frameNum)
+            "0" + str(self.frameNum)
         else:
-            partial_frame = str(self.frameNum)
+            str(self.frameNum)
 
-        self.background = arcade.load_texture(config.ASSET_DIR / "images" / f"ezgif-frame-{partial_frame}.png")
-        arcade.draw_texture_rectangle(
-            config.SCREEN_WIDTH // 2,
-            config.SCREEN_HEIGHT // 2,
-            config.SCREEN_WIDTH,
-            config.SCREEN_HEIGHT,
-            self.background,
-        )
         # changing it to the next frame
         self.frameNum += 1
         if self.frameNum > self.maxFrames:
@@ -269,8 +263,15 @@ class StartView(arcade.View):
         self.manager.draw()
 
     def on_hide_view(self):
-        """Disable the UI events"""
+        # Disable the UIManager when the view is hidden.
         self.manager.disable()
+
+    def on_show_view(self):
+        """ This is run once when we switch to this view """
+        arcade.set_background_color(arcade.color.DARK_BLUE_GRAY)
+
+        # Enable the UIManager when the view is showm.
+        self.manager.enable()
 
 
 def main():

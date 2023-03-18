@@ -1,20 +1,21 @@
 import gzip
 import pickle
+import threading
+import time
 from collections import deque
 from math import atan, pi
-import time
-from typing import Optional, Tuple, Set
-import threading
 from queue import Empty, Queue
+from typing import Optional, Set, Tuple
 
 import arcade
-from entities.player import Player, PlayerSpriteList
+
+import config
 from block.block import Block
+from entities.player import Player, PlayerSpriteList
 from misc.camera import CustomCamera
+from misc.chunk import HorizontalChunk
 from misc.terrain import gen_world
 from utils import Timer
-from misc.chunk import HorizontalChunk
-import config
 
 
 class World:
@@ -57,7 +58,7 @@ class World:
         # Visible chunks
         self._active_chunks: deque = deque()
 
-        self.camera = CustomCamera(*self._screen_size)
+        self.camera = CustomCamera()
 
         # Chunk loader
         self._chunk_loader = ChunkLoader()
@@ -68,13 +69,12 @@ class World:
         return self._player_sprite
 
     def draw(self):
-        arcade.set_background_color(arcade.color.AMAZON)
         self.camera.use()
 
         for chunk in self._active_chunks:
             chunk.draw()
 
-        self._player_list.draw(pixelated=True)
+        self._player_list.draw()
         self.debug_draw_chunks()
 
     def update(self):
@@ -84,7 +84,7 @@ class World:
         self.process_new_chunks()
 
         if self._player_sprite.center_y < -100:
-            self._player_sprite.set_position(self._player_default_x, self._player_default_y)
+            self._player_sprite.position = (self._player_default_x, self._player_default_y)
 
         self._physics_engine.update()
         self._player_list.update_list()
@@ -220,7 +220,7 @@ class World:
                 arcade.color.RED,
             )
 
-    def get_chunk_at_world_position(self, x, y) -> Optional[HorizontalChunk]:
+    def get_chunk_at_world_position(self, x, _y) -> Optional[HorizontalChunk]:
         """Get a chunk at a wold position"""
         return self._whole_world.get((x + config.SPRITE_PIXEL_SIZE / 2) // 320)
 
@@ -242,11 +242,11 @@ class World:
         block_id = self._player_sprite.inventory.get_selected_item_id_and_remove()
         if not block_id:
             return
-        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
+        self._whole_world[int((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].add(actual_x, actual_y, block_id)
 
     def remove_block(self, block: Block):
         x = block.center_x
-        self._whole_world[((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].remove(block)
+        self._whole_world[int((x + config.SPRITE_PIXEL_SIZE / 2) // 320)].remove(block)
 
     @property
     def whole_world(self):
@@ -313,9 +313,12 @@ class ChunkLoader:
 
     def start(self):
         """Start the thread if not already started"""
-        if not self.thread.is_alive():
-            print("Starting chunk loader thread")
-            self.thread.start()
+        try:
+            if not self.thread.is_alive():
+                print("Starting chunk loader thread")
+                self.thread.start()
+        except RuntimeError:
+            pass
 
     def _run(self):
         while True:

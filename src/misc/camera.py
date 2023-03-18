@@ -1,14 +1,15 @@
+from abc import ABC
 from typing import Optional
 
-from arcade import Camera, Window
+from arcade import Camera
 from pyglet.math import Vec2
 
 from entities.player import Direction, Player
 
 
-class CustomCamera(Camera):
-    def __init__(self, viewport_width: int = 0, viewport_height: int = 0, window: Optional[Window] = None):
-        super().__init__(viewport_width, viewport_height, window)
+class CustomCamera(Camera, ABC):
+    def __init__(self):
+        super().__init__()
 
     def center_camera_to_player(self, player_sprite: Player) -> None:
         x_offset = self.get_x_offset(player_sprite.direction)

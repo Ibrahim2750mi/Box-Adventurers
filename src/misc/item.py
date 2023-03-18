@@ -1,5 +1,6 @@
-from arcade import Sprite, draw_text, draw_rectangle_outline
+from arcade import Sprite, draw_text
 from arcade.csscolor import WHITE
+
 import config
 
 
@@ -7,7 +8,7 @@ class Item(Sprite):
 
     def __init__(self, stackable: bool, block_id: int, *args, **kwargs):
         super().__init__(
-            filename=config.ASSET_DIR / "sprites" / f"{block_id}.png",
+            config.ASSET_DIR / "sprites" / f"{block_id}.png",
             scale=config.INVENTORY_SCALING,
             *args,
             **kwargs,
@@ -23,7 +24,7 @@ class Item(Sprite):
                         ((self.width + config.INVENTORY_SCALING) * (slot - 1))
         self.center_y = cen_y - (inv_height / 2) + 2*config.INVENTORY_SCALING/3 + config.INVENTORY_SCALING * 29/3
 
-        self.draw(pixelated=True)
+        self.draw()
 
         # draw_text("20", self.center_x - 20, self.center_y - 20, WHITE, 18)
         draw_text(str(self.amount), self.center_x + 5, self.center_y - 20, WHITE, 12)
@@ -31,7 +32,7 @@ class Item(Sprite):
     def replicate(self, center_x: int, center_y: int):
         """Replicate for the player hand."""
         return Sprite(
-            filename=config.ASSET_DIR / "sprites" / f"{self.block_id}.png",
+            config.ASSET_DIR / "sprites" / f"{self.block_id}.png",
             scale=1/(2 * config.SPRITE_PIXEL_SIZE),
             center_x=center_x,
             center_y=center_y
